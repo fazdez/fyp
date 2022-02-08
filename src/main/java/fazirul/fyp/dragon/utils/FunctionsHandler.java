@@ -17,16 +17,16 @@ public class FunctionsHandler {
 
     }
 
+    public void addServiceMapping(Cloudlet service, List<Integer> possibleFunctions) {
+        serviceMappings.put(service, possibleFunctions);
+    }
+
     //randomly maps a service to feasible functions
     public void addServiceMapping(Cloudlet service) {
         List<Integer> feasibleFunctions = getFeasibleFunctions(service);
         Collections.shuffle(feasibleFunctions);
 
         serviceMappings.put(service, feasibleFunctions.subList(0, new Random().nextInt(feasibleFunctions.size() + 1)));
-    }
-
-    public void setServiceMapping(Cloudlet service, List<Integer> possibleFunctions) {
-        serviceMappings.put(service, possibleFunctions);
     }
 
     public List<Integer> getServiceMapping(Cloudlet service) {
