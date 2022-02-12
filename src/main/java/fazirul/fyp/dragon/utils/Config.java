@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 
 public class Config {
-    private static final String filename = "";
+    private static final String filename = "config.json";
     private static Config singleInstance = null;
     private ConfigPOJO configurations;
 
