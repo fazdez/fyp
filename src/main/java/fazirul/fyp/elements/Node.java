@@ -21,11 +21,19 @@ import org.cloudbus.cloudsim.vms.Vm;
 public class Node {
     private final DatacenterBroker broker;
     private final DatacenterSimple datacenter;
+    private static int globalID = 0;
+    private final int id;
 
     public Node(CloudSim simulation, ResourceBundle resources) {
         datacenter = new DatacenterSimple(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
         broker = new DatacenterBrokerSimple(simulation);
         broker.setDatacenterMapper((dc, u)-> datacenter);
+        id = globalID;
+        globalID++;
+    }
+
+    public int getID() {
+        return id;
     }
 
     public void allocate(Vm function, Cloudlet task) {

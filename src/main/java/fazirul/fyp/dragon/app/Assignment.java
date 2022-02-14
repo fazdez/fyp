@@ -5,6 +5,7 @@ import fazirul.fyp.elements.Node;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 
+import java.text.MessageFormat;
 import java.util.*;
 
 // made up of ServiceAssignments
@@ -20,6 +21,10 @@ public class Assignment {
 
     public List<ServiceAssignment> getAssignments() {
         return new ArrayList<>(this.data.values());
+    }
+
+    public Set<Cloudlet> getServices() {
+        return data.keySet();
     }
 
     public void offload() {
@@ -127,6 +132,21 @@ public class Assignment {
             if (s == null) { result += 1; }
         }
         return result;
+    }
+
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+
+        for (Cloudlet service: data.keySet()) {
+            ServiceAssignment sa = data.get(service);
+            if (sa == null) { continue; }
+            result.append(getCloudletInformation(service)).append("\n").append("deployed on node ").append(sa.getNode().getID()).append("using function ").append(sa.getFunction()).append("with utility ").append(sa.getUtility()).append("\n");
+        }
+        return result.toString();
+    }
+
+    private String getCloudletInformation(Cloudlet cloudlet) {
+        return MessageFormat.format("service (cpu: {0},mem: {1},bw: {2})", cloudlet.getNumberOfPes(), cloudlet.getUtilizationOfRam(), cloudlet.getUtilizationOfBw());
     }
 }
 

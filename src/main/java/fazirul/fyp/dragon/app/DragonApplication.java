@@ -10,10 +10,12 @@ import fazirul.fyp.elements.Node;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 
+import java.text.MessageFormat;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DragonApplication extends DistributedApplication {
     private GlobalData data;
@@ -33,6 +35,18 @@ public class DragonApplication extends DistributedApplication {
         for (Node n: nodes) {
             maxBidRatios.put(n, Double.MAX_VALUE);
         }
+    }
+
+    public Set<Cloudlet> getServices() {
+        return assignment.getServices();
+    }
+
+    public void printResults() {
+        String message = MessageFormat.format("application ID: {0, number, integer}\n" +
+                "lost = {1}\n" +
+                "assignment = {2}", id, lost, assignment.toString());
+
+        System.out.println(message);
     }
 
     @Override
@@ -79,6 +93,7 @@ public class DragonApplication extends DistributedApplication {
             sleep(1000); //wait in initialize in case other threads have not started
         } catch (Exception ignored) {}
         initialized = true;
+        System.out.println(id + " started");
     }
 
     protected void postProcessing() {
@@ -86,7 +101,6 @@ public class DragonApplication extends DistributedApplication {
             assignment.offload();
         }
     }
-
 
     private boolean agreement(HashMap<Node, PerNodeElection> result, List<MessageInterface> messages) {
         boolean agreed = true;

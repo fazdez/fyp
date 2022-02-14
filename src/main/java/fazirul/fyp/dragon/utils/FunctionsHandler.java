@@ -1,5 +1,6 @@
 package fazirul.fyp.dragon.utils;
 
+import fazirul.fyp.dragon.app.DragonApplication;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.vms.Vm;
@@ -10,11 +11,11 @@ import java.util.*;
 // Singleton class
 public class FunctionsHandler {
     private static FunctionsHandler singleInstance = null;
-    private final List<ResourceBundle> functions = new ArrayList<>(); // function_id = index in the list
+    private final List<ResourceBundle> functions; // function_id = index in the list
     private final HashMap<Cloudlet, List<Integer>> serviceMappings = new HashMap<>();
 
     public FunctionsHandler() {
-
+        functions = Config.getInstance().getFunctions();
     }
 
     public void addServiceMapping(Cloudlet service, List<Integer> possibleFunctions) {
@@ -35,6 +36,14 @@ public class FunctionsHandler {
 
     public ResourceBundle getFunctionResourceUsage(int functionID) {
         return functions.get(functionID);
+    }
+
+    public void registerApplications(List<DragonApplication> applicationList) {
+        for (DragonApplication app: applicationList) {
+            for (Cloudlet service: app.getServices()) {
+                addServiceMapping(service);
+            }
+        }
     }
 
     public Vm createFunction(int functionID) {
