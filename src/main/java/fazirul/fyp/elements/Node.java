@@ -23,6 +23,7 @@ public class Node {
     private final DatacenterSimple datacenter;
     private static int globalID = 0;
     private final int id;
+    private final static int DEFAULT_STORAGE_CAPACITY = 100000000;
 
     public Node(CloudSim simulation, ResourceBundle resources) {
         datacenter = new DatacenterSimple(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
@@ -51,8 +52,7 @@ public class Node {
         for (int i = 0; i < resources.getCPU(); i ++){
             peList.add(new PeSimple(Constants.HOST_DEFAULT_MIPS));
         }
-
-        return new HostSimple(resources.getMemory(), resources.getBandwidth(), 0, peList);
+        return new HostSimple(resources.getMemory(), resources.getBandwidth(), DEFAULT_STORAGE_CAPACITY, peList);
     }
 
     public ResourceBundle getResources() {

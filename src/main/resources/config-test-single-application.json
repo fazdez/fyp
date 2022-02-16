@@ -6,25 +6,14 @@
     { "cpu":  2, "memory":  1024, "bandwidth":  256 },
     { "cpu":  1, "memory":  256, "bandwidth":   512},
     { "cpu":  3, "memory":  768, "bandwidth":  256 },
-    { "cpu":  3, "memory":  1024, "bandwidth":  512 },
+    { "cpu":  2, "memory":  1024, "bandwidth":  512 },
     { "cpu":  1, "memory":  256, "bandwidth":  128 },
     { "cpu":  1, "memory":  512, "bandwidth":  256 }
   ],
   "applications": [
     [
-      { "cpu":  1, "memory":  100, "bandwidth":  100 },
-      { "cpu":  3, "memory":  100, "bandwidth":  200 },
-      { "cpu":  3, "memory":  200, "bandwidth":  100 }
-    ],
-    [
       { "cpu":  1, "memory":  10, "bandwidth":  10 },
       { "cpu":  2, "memory":  1000, "bandwidth":  300 }
-    ],
-    [ { "cpu":  3, "memory":  1024, "bandwidth":  512 } ],
-    [
-      { "cpu":  1, "memory":  256, "bandwidth":  128 },
-      { "cpu":  2, "memory":  512, "bandwidth":  256 },
-      { "cpu":  3, "memory":  768, "bandwidth":  512 }
     ]
   ],
   "nodes": [
@@ -33,10 +22,5 @@
     { "cpu":  12, "memory":  8192, "bandwidth":  4096 },
     { "cpu":  4, "memory":  2048, "bandwidth":  1024 }
   ],
-  "topology": {
-    "0": ["1"],
-    "1": ["0", "2"],
-    "2": ["1", "3"],
-    "3": ["2"]
-  }
+  "topology": {}
 }

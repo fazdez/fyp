@@ -8,9 +8,7 @@ import fazirul.fyp.elements.UtilizationModelAbsolute;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.core.Simulation;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +16,7 @@ import java.util.List;
 
 public class Config {
     private static final String filename = "/config.json";
+    private static final String testFilename = "/config-test-single-application.json";
     private static Config singleInstance = null;
     private ConfigPOJO configurations;
 
@@ -58,6 +57,7 @@ public class Config {
     }
 
     public List<DragonApplication> getApplications(HashSet<Node> nodes) {
+        int serviceID = 0;
         int totalNumApplications = configurations.getApplications().length;
         List<DragonApplication> result = new ArrayList<>();
         int id = 0;
@@ -67,12 +67,24 @@ public class Config {
                 Cloudlet service = new CloudletSimple(Constants.CLOUDLET_DEFAULT_MI, serviceInfo.getCpu());
                 service.setUtilizationModelBw(new UtilizationModelAbsolute(serviceInfo.getBandwidth()));
                 service.setUtilizationModelRam(new UtilizationModelAbsolute(serviceInfo.getMemory()));
+                service.setId(serviceID);
+                serviceID++;
+
 
                 services.add(service);
             }
-
             result.add(new DragonApplication(id, nodes, totalNumApplications, services));
             id++;
+        }
+
+        HashMap<Integer, int[]> topology = configurations.getTopology();
+
+        //set topology
+        for (int app: topology.keySet()) {
+            int[] neighbours = topology.get(app);
+            for (int n: neighbours) {
+                result.get(app).addNeighbour(result.get(n));
+            }
         }
 
         return result;
@@ -105,9 +117,9 @@ class ConfigPOJO {
         this.nodes = nodes;
     }
 
-    private HashMap<Integer, Integer[]> topology;
-    public HashMap<Integer, Integer[]> getTopology() { return topology; }
-    public void setTopology(HashMap<Integer, Integer[]> topology) {
+    private HashMap<Integer, int[]> topology;
+    public HashMap<Integer, int[]> getTopology() { return topology; }
+    public void setTopology(HashMap<Integer, int[]> topology) {
         this.topology = topology;
     }
 }

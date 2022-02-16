@@ -137,16 +137,24 @@ public class Assignment {
     public String toString() {
         StringBuilder result = new StringBuilder();
 
-        for (Cloudlet service: data.keySet()) {
-            ServiceAssignment sa = data.get(service);
+        for (ServiceAssignment sa: data.values()) {
             if (sa == null) { continue; }
-            result.append(getCloudletInformation(service)).append("\n").append("deployed on node ").append(sa.getNode().getID()).append("using function ").append(sa.getFunction()).append("with utility ").append(sa.getUtility()).append("\n");
+            result.append(getCloudletInformation(sa.getService())).append(" deployed on node ").append(sa.getNode().getID()).append(" using function ").append(sa.getFunction()).append(" with utility ").append(sa.getUtility()).append("\n");
         }
         return result.toString();
     }
 
     private String getCloudletInformation(Cloudlet cloudlet) {
-        return MessageFormat.format("service (cpu: {0},mem: {1},bw: {2})", cloudlet.getNumberOfPes(), cloudlet.getUtilizationOfRam(), cloudlet.getUtilizationOfBw());
+        return MessageFormat.format("service (cpu: {0},mem: {1},bw: {2})\n", cloudlet.getNumberOfPes(), cloudlet.getUtilizationOfRam(), cloudlet.getUtilizationOfBw());
     }
+
+    public String getCloudletsInformation() {
+        StringBuilder result = new StringBuilder();
+        for (Cloudlet service: data.keySet()) {
+            result.append(getCloudletInformation(service));
+        }
+        return result.toString();
+    }
+
 }
 

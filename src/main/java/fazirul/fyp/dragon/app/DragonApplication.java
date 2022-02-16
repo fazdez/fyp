@@ -8,6 +8,8 @@ import fazirul.fyp.elements.DistributedApplication;
 import fazirul.fyp.elements.MessageInterface;
 import fazirul.fyp.elements.Node;
 import fazirul.fyp.elements.ResourceBundle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 
 import java.text.MessageFormat;
@@ -18,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 public class DragonApplication extends DistributedApplication {
+    private final Logger logger = LogManager.getLogger(DragonApplication.class);
     private GlobalData data;
     private Assignment assignment;
     private boolean initialized = false;
@@ -42,9 +45,10 @@ public class DragonApplication extends DistributedApplication {
     }
 
     public void printResults() {
-        String message = MessageFormat.format("application ID: {0, number, integer}\n" +
-                "lost = {1}\n" +
-                "assignment = {2}", id, lost, assignment.toString());
+        String message = MessageFormat.format("""
+                application ID: {0, number, integer}
+                lost = {1}
+                assignment = {2}""", id, lost, assignment.toString());
 
         System.out.println(message);
     }
@@ -52,9 +56,13 @@ public class DragonApplication extends DistributedApplication {
     @Override
     protected void orchestrate() {
         if (!initialized) {
-            embedding(getNodeResources());
+            if(!embedding(getNodeResources())) {
+                logger.error("could not find suitable embedding before initialization. ending...");
+                ended = true;
+                lost = true;
+                return;
+            }
             voting();
-            initialized = true;
             return;
         }
 
@@ -91,9 +99,11 @@ public class DragonApplication extends DistributedApplication {
         orchestrate();
         try {
             sleep(1000); //wait in initialize in case other threads have not started
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         initialized = true;
-        System.out.println(id + " started");
+        logger.debug(MessageFormat.format("application {0} initialized with services: \n {1}\n", id, assignment.getCloudletsInformation()));
     }
 
     protected void postProcessing() {
@@ -124,7 +134,6 @@ public class DragonApplication extends DistributedApplication {
 
     private boolean embedding(HashMap<Node, ResourceBundle> residualResources) {
         if (this.assignment.completed()) { return true; } //base case
-
         List<ServiceAssignment> nextAssignments = this.assignment.getNextBestAssignments();
         int oldNumIncompleteServices = this.assignment.numIncompleteServices();
         for (ServiceAssignment serviceAssignment: nextAssignments) {

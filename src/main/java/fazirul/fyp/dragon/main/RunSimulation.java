@@ -37,6 +37,6 @@ public class RunSimulation {
             System.out.println();
         }
 
-//        simulation.start();
+        simulation.start();
     }
 }

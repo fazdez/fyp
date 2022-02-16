@@ -48,7 +48,7 @@ public class ResourceBundle {
 
     //A.isBounded(B) == true if A has more resources than B
     public boolean isBounded(ResourceBundle resourceDemanded) {
-        return this.cpu > resourceDemanded.cpu && this.memory > resourceDemanded.memory && this.bandwidth > resourceDemanded.bandwidth;
+        return this.cpu >= resourceDemanded.cpu && this.memory >= resourceDemanded.memory && this.bandwidth >= resourceDemanded.bandwidth;
     }
 
     public void addResources(ResourceBundle toAdd) {
