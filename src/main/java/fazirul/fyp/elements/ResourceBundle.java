@@ -4,6 +4,8 @@ package fazirul.fyp.elements;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
 
+import java.text.MessageFormat;
+
 public class ResourceBundle {
     private static final int CPU = 1;
     private static final int MEMORY = 2;
@@ -88,5 +90,9 @@ public class ResourceBundle {
 
     public ResourceBundle clone() {
         return new ResourceBundle(this.cpu, this.bandwidth, this.memory);
+    }
+
+    public String toString() {
+        return MessageFormat.format("(cpu = {0}, bw = {1}, memory = {2})", getCPU(), getBandwidth(), getMemory());
     }
 }

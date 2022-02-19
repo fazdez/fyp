@@ -46,9 +46,8 @@ public class DragonApplication extends DistributedApplication {
 
     public void printResults() {
         String message = MessageFormat.format("""
-                application ID: {0, number, integer}
-                lost = {1}
-                assignment = {2}""", id, lost, assignment.toString());
+                application ID: {0, number, integer} || lost = {1}
+                assignment = {2}\n""", id, lost, assignment.toString());
 
         System.out.println(message);
     }
@@ -63,6 +62,8 @@ public class DragonApplication extends DistributedApplication {
                 return;
             }
             voting();
+            Election result = new Election(data, getNodeResources());
+            broadcast(new Message(data, id, LocalTime.now(), result.getWinnersPerNode()));
             return;
         }
 
@@ -72,12 +73,15 @@ public class DragonApplication extends DistributedApplication {
             ended = true;
             return;
         }
+
         Election result = new Election(data, getNodeResources());
         if (agreement(result.getElectionResults(), messages)) {
             ended = true;
             return;
         }
 
+        //agreement failed, thus need to run election again with updated result
+        result = new Election(data, getNodeResources());
         while(outvoted(result)) {
             updateMaxRatio(result.getElectionResults());
             this.assignment.reset();
@@ -90,8 +94,8 @@ public class DragonApplication extends DistributedApplication {
 
             voting();
             result = new Election(data, getNodeResources());
-            broadcast(new Message(data, id, LocalTime.now(), result.getWinnersPerNode()));
         }
+        broadcast(new Message(data, id, LocalTime.now(), result.getWinnersPerNode()));
     }
 
     @Override
@@ -110,6 +114,16 @@ public class DragonApplication extends DistributedApplication {
         if (!lost) {
             assignment.offload();
         }
+    }
+
+    @Override
+    public HashMap<Node, ResourceBundle> getFinalResourcesConsumption() {
+        HashMap<Node, ResourceBundle> result = new HashMap<>();
+        for (Node n: nodes) {
+            result.put(n, assignment.getResourceUsage(n));
+        }
+
+        return result;
     }
 
     private boolean agreement(HashMap<Node, PerNodeElection> result, List<MessageInterface> messages) {

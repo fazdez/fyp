@@ -3,12 +3,14 @@ package fazirul.fyp.elements;
 import fazirul.fyp.dragon.utils.Message;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public abstract class DistributedApplication extends Thread {
     protected List<DistributedApplication> neighbours = new ArrayList<>();
     protected MessageQueue incomingMessages = new MessageQueue();
     protected boolean ended = false;
+    private int totalMessagesSent = 0;
 
     @Override
     public void run() {
@@ -28,6 +30,7 @@ public abstract class DistributedApplication extends Thread {
     }
 
     protected void broadcast(MessageInterface message) {
+        totalMessagesSent++;
         for (DistributedApplication n: this.neighbours) {
             n.addToQueue(message.clone());
         }
@@ -40,4 +43,12 @@ public abstract class DistributedApplication extends Thread {
     protected abstract void initialize();
 
     protected abstract void postProcessing();
+
+    public abstract void printResults();
+
+    public abstract HashMap<Node, ResourceBundle> getFinalResourcesConsumption();
+
+    public int getTotalMessagesSent() {
+        return totalMessagesSent;
+    }
 }
