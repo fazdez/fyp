@@ -53,19 +53,20 @@ public class Election {
 
     private HashSet<Integer> computeFalseWinners(HashMap<Node, PerNodeElection> electionResults) {
         HashMap<Integer, List<Node>> losers = getLosers(electionResults);
+        HashSet<Integer> winners = getWinners(electionResults);
         HashSet<Integer> falseWinners = new HashSet<>();
         List<Integer> sortedApplications = data.getApplicationsSortedByMaxBids();
 
         for (int app: sortedApplications) {
-            if (falseWinners.contains(app)) { continue; }
+            if (!winners.contains(app)) { continue; } // if the app was not even a winner in any node i.e. a loser in all nodes, skip.
 
             if (losers.containsKey(app)) {
                 HashSet<Integer> possibleFakes = new HashSet<>();
                 for (Node n: losers.get(app)) {
-                    PossibleFalseWinners result = findFalseWinnersForNode(data.getMaxBids(), electionResults, app, n, losers, falseWinners, new HashSet<>());
+                    PossibleFalseWinners result = findPossibleFalseWinnersForNode(data.getMaxBids(), electionResults, app, n, losers, falseWinners, new HashSet<>());
                     possibleFakes.addAll(result.possibles);
 
-                    // no possible fake found, means this application itself is the fake!
+                    // no possible fake found for this node, means there's no way for this app to win any in this node.
                     if (!result.found) {
                         falseWinners.add(app);
                         break;
@@ -76,9 +77,9 @@ public class Election {
                 for (int fake: possibleFakes) {
                     for (Node n: losers.get(fake)) {
                         // for each node that the possible fake has lost, if you minus off all the known fakes, and it still lost, means it's a fake
-                        HashSet<Integer> winners = new HashSet<>(electionResults.get(n).getWinners());
-                        winners.removeAll(falseWinners);
-                        if (!winners.isEmpty()) {
+                        HashSet<Integer> winnersForNode = new HashSet<>(electionResults.get(n).getWinners());
+                        winnersForNode.removeAll(falseWinners);
+                        if (!winnersForNode.isEmpty()) {
                             falseWinners.add(fake);
                             break;
                         }
@@ -89,12 +90,13 @@ public class Election {
         return falseWinners;
     }
 
-    private PossibleFalseWinners findFalseWinnersForNode(HashMap<Integer, Integer> maxBids, HashMap<Node, PerNodeElection> electionResults, int application, Node node,
-                                                         HashMap<Integer, List<Node>> losers, HashSet<Integer> falseWinners, HashSet<Integer> ignored) {
+    //recursively finds, for each winner of this node, whether this winner has lost in other nodes. if yes, then it is a possible false winner. (otherwise, it is a true winner)
+    private PossibleFalseWinners findPossibleFalseWinnersForNode(HashMap<Integer, Integer> maxBids, HashMap<Node, PerNodeElection> electionResults, int application, Node node,
+                                                                 HashMap<Integer, List<Node>> losers, HashSet<Integer> falseWinners, HashSet<Integer> ignored) {
 
         PossibleFalseWinners result = new PossibleFalseWinners();
         List<Integer> winnersForNode = new ArrayList<>(electionResults.get(node).getWinners());
-        winnersForNode.sort(Comparator.comparingInt(maxBids::get));
+        winnersForNode.sort(Comparator.comparingInt(maxBids::get)); // we start with the winner with the smallest bid.
 
         // check each winner for that node whether they are true or fake winners
         for (int winner: winnersForNode) {
@@ -106,12 +108,13 @@ public class Election {
             //if not ignored & is a loser --> means it is a possible fakeWinner
             if (!ignored.contains(winner) && losers.containsKey(winner)) {
                 for (Node n: losers.get(winner)) {
-                    PossibleFalseWinners otherFalseWinners = findFalseWinnersForNode(maxBids, electionResults, winner, n, losers,
+                    // for each other node that this "winner" lost, assume it won and see whether any other false winners can be found.
+                    PossibleFalseWinners otherFalseWinners = findPossibleFalseWinnersForNode(maxBids, electionResults, winner, n, losers,
                             union(falseWinners, result.possibles), union(ignored, application));
 
                     if (!otherFalseWinners.found) { //if no other false winners found, itself is the false winner.
                         result.found = true;
-                        return result;
+                        return result; // we can return
                     }
 
                     result.possibles.addAll(otherFalseWinners.possibles);
@@ -122,7 +125,7 @@ public class Election {
         return result;
     }
 
-    //only for use in findFalseWinnersForNode
+    //only for use in findPossibleFalseWinnersForNode
     private class PossibleFalseWinners {
         HashSet<Integer> possibles = new HashSet<>();
         boolean found = false;
@@ -139,6 +142,16 @@ public class Election {
             }
         }
         return losers;
+    }
+
+    private HashSet<Integer> getWinners(HashMap<Node, PerNodeElection> electionResults) {
+        HashSet<Integer> results = new HashSet<>();
+
+        for (Node n: electionResults.keySet()) {
+            results.addAll(electionResults.get(n).getWinners());
+        }
+
+        return results;
     }
 
     private HashMap<Node, HashSet<Integer>> getWinnersPerNode(HashMap<Node, PerNodeElection> electionResults) {

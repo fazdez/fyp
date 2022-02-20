@@ -80,7 +80,8 @@ public class DistributedSimulation {
         }
 
         for (Node n: resourceConsumption.keySet()) {
-            System.out.println("Node " + n.getID() + " consumption: " + resourceConsumption.get(n).toString());
+            System.out.print("Node " + n.getID() + " consumption: " + resourceConsumption.get(n).toString());
+            System.out.println(" exceeded = " + (!n.getResources().isBounded(resourceConsumption.get(n))));
         }
     }
 }
