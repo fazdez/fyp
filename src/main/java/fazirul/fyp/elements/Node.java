@@ -30,6 +30,7 @@ public class Node {
         datacenter = new DatacenterSimple(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
         broker = new DatacenterBrokerSimple(simulation);
         broker.setDatacenterMapper((dc, u)-> datacenter);
+        broker.setVmDestructionDelay(0.2);
         id = globalID;
         globalID++;
         totalResources = resources;
