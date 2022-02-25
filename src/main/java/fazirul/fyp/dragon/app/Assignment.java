@@ -136,9 +136,10 @@ public class Assignment {
 
     public String toString() {
         StringBuilder result = new StringBuilder();
-
         for (ServiceAssignment sa: data.values()) {
-            if (sa == null) { continue; }
+            if (sa == null) {
+                continue;
+            }
             result.append(getCloudletInformation(sa.getService())).append(" deployed on node ").append(sa.getNode().getID()).append(" using function ").append(sa.getFunction()).append(" with utility ").append(sa.getUtility()).append("\n");
         }
         return result.toString();

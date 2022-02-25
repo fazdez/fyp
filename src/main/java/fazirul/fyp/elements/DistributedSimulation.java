@@ -1,9 +1,6 @@
 package fazirul.fyp.elements;
 
 import fazirul.fyp.dragon.app.DragonApplication;
-import org.cloudbus.cloudsim.core.CloudSimEntity;
-import org.cloudbus.cloudsim.core.Simulation;
-import org.cloudbus.cloudsim.core.events.SimEvent;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -81,7 +78,7 @@ public class DistributedSimulation {
 
         for (Node n: resourceConsumption.keySet()) {
             System.out.print("Node " + n.getID() + " consumption: " + resourceConsumption.get(n).toString());
-            System.out.println(" exceeded = " + (!n.getResources().isBounded(resourceConsumption.get(n))));
+            System.out.println(" exceeded = " + (!n.getTotalResources().isBounded(resourceConsumption.get(n))));
         }
     }
 }

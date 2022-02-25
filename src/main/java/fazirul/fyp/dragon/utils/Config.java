@@ -17,6 +17,7 @@ import java.util.List;
 public class Config {
     private static final String filename = "/config.json";
     private static final String testFilename = "/config-test-single-application.json";
+    private static final String filename_nofeasiblesolution = "/config-no-feasible-solution.json";
     private static Config singleInstance = null;
     private ConfigPOJO configurations;
 

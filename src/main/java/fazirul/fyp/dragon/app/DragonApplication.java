@@ -76,8 +76,17 @@ public class DragonApplication extends DistributedApplication {
 
         Election result = new Election(data, getNodeResources());
         if (agreement(result.getElectionResults(), messages)) {
-            ended = true;
-            return;
+            try{
+                sleep(1500); //double confirm by waiting a short amount of time in case new messages come in
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            messages = incomingMessages.flush();
+            if (agreement(result.getElectionResults(), messages)) {
+                ended = true;
+                return;
+            }
         }
 
         //agreement failed, thus need to run election again with updated result
@@ -135,6 +144,8 @@ public class DragonApplication extends DistributedApplication {
                     break;
                 }
             }
+
+            if (!agreed) { break; }
         }
 
         if (!agreed) {
@@ -183,7 +194,7 @@ public class DragonApplication extends DistributedApplication {
 
     private int getVote(Node n) {
         int vote = this.assignment.getTotalPrivateUtility(n);
-        double normalisedDemandedResource = this.assignment.getResourceUsage(n).normalise(n.getResources());
+        double normalisedDemandedResource = this.assignment.getResourceUsage(n).normalise(n.getAvailableResources());
         double ratio = (vote/normalisedDemandedResource);
         if (ratio > maxBidRatios.get(n)) {
             return (int) (normalisedDemandedResource*maxBidRatios.get(n));
@@ -199,7 +210,7 @@ public class DragonApplication extends DistributedApplication {
     private HashMap<Node, ResourceBundle> getNodeResources() {
         HashMap<Node, ResourceBundle> result = new HashMap<>();
         for (Node n: nodes) {
-            result.put(n, n.getResources());
+            result.put(n, n.getAvailableResources());
         }
         return result;
     }

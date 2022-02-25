@@ -70,7 +70,7 @@ public class GlobalData {
     }
 
     public double getVoteResourceRatioForApplication(Node n, int application) {
-        return data.get(n).getVoteResourceRatioForApplication(application, n.getResources());
+        return data.get(n).getVoteResourceRatioForApplication(application, n.getAvailableResources());
     }
 
     public PerNodeGlobalData getPerNodeGlobalData(Node n) {

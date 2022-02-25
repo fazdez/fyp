@@ -24,6 +24,7 @@ public class Node {
     private static int globalID = 0;
     private final int id;
     private final static int DEFAULT_STORAGE_CAPACITY = 100000000;
+    private final ResourceBundle totalResources;
 
     public Node(CloudSim simulation, ResourceBundle resources) {
         datacenter = new DatacenterSimple(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
@@ -31,6 +32,7 @@ public class Node {
         broker.setDatacenterMapper((dc, u)-> datacenter);
         id = globalID;
         globalID++;
+        totalResources = resources;
     }
 
     public int getID() {
@@ -55,10 +57,14 @@ public class Node {
         return new HostSimple(resources.getMemory(), resources.getBandwidth(), DEFAULT_STORAGE_CAPACITY, peList);
     }
 
-    public ResourceBundle getResources() {
+    public ResourceBundle getAvailableResources() {
         int bw = (int) datacenter.getHost(0).getBw().getAvailableResource();
         int cpu = datacenter.getHost(0).getFreePesNumber();
         int ram = (int) datacenter.getHost(0).getRam().getAvailableResource();
         return new ResourceBundle(cpu, bw, ram);
+    }
+
+    public ResourceBundle getTotalResources() {
+        return totalResources;
     }
 }
