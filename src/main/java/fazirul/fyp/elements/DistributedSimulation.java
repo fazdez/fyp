@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-/**
- * test
- */
+
 public class DistributedSimulation {
     private final List<DistributedApplication> applications = new ArrayList<>();
     private long timeTaken = 0;
