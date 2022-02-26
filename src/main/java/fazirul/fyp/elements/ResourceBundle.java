@@ -3,6 +3,7 @@ package fazirul.fyp.elements;
 
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
+import org.cloudbus.cloudsim.vms.Vm;
 
 import java.text.MessageFormat;
 
@@ -30,6 +31,12 @@ public class ResourceBundle {
         if (service.getUtilizationModelBw().getUnit() == UtilizationModel.Unit.PERCENTAGE || service.getUtilizationModelRam().getUnit() == UtilizationModel.Unit.PERCENTAGE) {
             System.out.println("creating ResourceBundle: invalid definition of cloudlet");
         }
+    }
+
+    public ResourceBundle(Vm virtualMachine) {
+        this.cpu = (int) virtualMachine.getNumberOfPes();
+        this.bandwidth = (int) virtualMachine.getBw().getCapacity();
+        this.memory = (int) virtualMachine.getRam().getCapacity();
     }
 
     public int getCPU() {

@@ -26,7 +26,7 @@ public class RunSimulation {
         distributedSimulation.addApplications(applicationList);
 
         distributedSimulation.start();
-//        simulation.start();
+        simulation.start();
 
         distributedSimulation.printResults();
         distributedSimulation.printSimulationTime();
