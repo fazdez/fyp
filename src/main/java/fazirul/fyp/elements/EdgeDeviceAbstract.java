@@ -162,8 +162,12 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
             long numStartAlgoEventsAtSameTime = getSimulation().getNumberOfFutureEvents(evt -> evt.getTag() == DistributedSimTags.START_ALGORITHM_EVENT
                     && evt.getSource() instanceof EdgeDeviceAbstract && evt.getTime() == startAlgoTime);
 
+            getDistSimManager().addEdgeDevice(this); //register the edge device to the DistSimManager
+
             if (numStartAlgoEventsAtSameTime > 1) {
-                LOGGER.warn("{}: {}: There are two StartAlgoEvent at the same time.", getSimulation().clockStr(), this);
+                //this should NOT happen
+                LOGGER.warn("{}: {}: There are two or more StartAlgoEvent at the same time.",
+                            getSimulation().clockStr(), this);
             } else if (numStartAlgoEventsAtSameTime == 0) {
                 //if no StartAlgoEvent at the same time, proceed to send this event to the DistSimManager
                 send(manager, WARM_UP_TIME, DistributedSimTags.START_ALGORITHM_EVENT);
@@ -196,7 +200,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * @return the manager for distributed simulation
      * @see DistSimManager
      */
-    private DistSimManager getDistSimManager() {
+    protected DistSimManager getDistSimManager() {
         List<SimEntity> entities = getSimulation().getEntityList();
         Optional<SimEntity> result = entities.stream().
                 filter(s -> s instanceof DistSimManager).findAny();

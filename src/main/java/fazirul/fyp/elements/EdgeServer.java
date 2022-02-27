@@ -17,24 +17,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class EdgeServer extends DatacenterSimple{
+public class EdgeServer extends DatacenterSimple {
     private static final String DEFAULT_NAME = "EdgeServer_";
     private static int globalID = 0;
-    private final int id;
     private final static int DEFAULT_STORAGE_CAPACITY = 100000000;
     private final ResourceBundle totalResources;
 
     public EdgeServer(CloudSim simulation, ResourceBundle resources) {
         super(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
-        id = globalID;
+        setName(DEFAULT_NAME + globalID);
         globalID++;
-        setName(DEFAULT_NAME + id);
         totalResources = resources;
     }
 
     private static Host createHostFromResourceBundle(ResourceBundle resources) {
         List<Pe> peList = new ArrayList<>();
-        for (int i = 0; i < resources.getCPU(); i ++){
+        for (int i = 0; i < resources.getCPU(); i++){
             peList.add(new PeSimple(Constants.HOST_DEFAULT_MIPS));
         }
         return new HostSimple(resources.getMemory(), resources.getBandwidth(), DEFAULT_STORAGE_CAPACITY, peList);

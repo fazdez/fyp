@@ -43,7 +43,6 @@ public class DistSimManager extends CloudSimEntity {
                 LOGGER.warn("{}: {}: received event from unexpected entity.", getSimulation().clockStr(), this);
                 return;
             }
-            addEdgeDevice((EdgeDeviceAbstract) simEvent.getSource());
             resetEdgeDevices();
             runSimulation();
             offloadEligibleEdgeDevices();
@@ -193,5 +192,12 @@ public class DistSimManager extends CloudSimEntity {
                 });
             }
         }
+    }
+
+    /**
+     * @return the total number of edge devices participating in distributed simulation.
+     */
+    public int getNumParticipatingEntities() {
+        return edgeDeviceList.size();
     }
 }
