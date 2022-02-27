@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Represents an edge device in a distributed context.
@@ -30,7 +27,7 @@ import java.util.Optional;
  * </ul>
  */
 public abstract class EdgeDeviceAbstract extends CloudSimEntity {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CloudSimEntity.class.getSimpleName());
+    protected static final Logger LOGGER = LoggerFactory.getLogger(CloudSimEntity.class.getSimpleName());
     private static final String DEFAULT_NAME = "EdgeDevice_";
     private static final int DEFAULT_CLOUDLET_LENGTH = 100;
     public static final double WARM_UP_TIME = 0.5;
@@ -50,7 +47,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * List of edge devices connected to the current device.
      */
     
-    protected List<EdgeDeviceAbstract> neighbours = new ArrayList<>();
+    protected final List<EdgeDeviceAbstract> neighbours = new ArrayList<>();
 
     /**
      * Incoming {@link MessageQueue message queue}.
@@ -62,7 +59,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * Each task is represented by the resource demanded.
      * <p>Upon offload, a {@link CloudletSimple} will be created to integrate with CloudSimPlus.</p>
      */
-    protected List<ResourceBundle> tasks;
+    protected final List<ResourceBundle> tasks;
 
     /**
      * Indicates the end of orchestration.
@@ -95,14 +92,20 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     /**
      * If edge device fails to win any resources after the algorithm process, set failed = true.
      */
-    private boolean failed = false;
+    protected boolean failed = false;
 
-    public EdgeDeviceAbstract(CloudSim simulation, String username, double arrivalTime) {
+    /**
+     *
+     */
+    private final HashSet<EdgeServer> edgeServers = new HashSet<>();
+
+    public EdgeDeviceAbstract(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
         super(simulation);
         setName(DEFAULT_NAME + username);
         broker = new DatacenterBrokerSimple(simulation, DEFAULT_NAME + username);
         this.username = username;
         this.arrivalTime = arrivalTime;
+        this.tasks = tasks;
     }
 
     public void setIndex(int id) {
@@ -119,6 +122,8 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         return runtime;
     }
 
+    protected void setRuntime(double runtime) { this.runtime = runtime; }
+
     public void addNeighbour(EdgeDeviceAbstract neighbour) {
         this.neighbours.add(neighbour);
     }
@@ -130,6 +135,10 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
             LOGGER.warn("{}: {}: Could not schedule ArrivalEvent to itself.",
                     getSimulation().clockStr(), this);
         };
+
+        //add all edge servers found
+        getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof EdgeServer)
+                .forEach(simEntity -> edgeServers.add((EdgeServer) simEntity));
     }
 
     @Override

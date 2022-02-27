@@ -1,6 +1,6 @@
 package fazirul.fyp.dragon.app;
 
-import fazirul.fyp.dragon.utils.FunctionsHandler;
+import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.Node;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
@@ -31,7 +31,7 @@ public class Assignment {
         for (Cloudlet c: data.keySet()) {
             Node n = data.get(c).getNode();
             int function = data.get(c).getFunction();
-            n.allocate(FunctionsHandler.getInstance().createFunction(function), c);
+            n.allocate(VirtualMachineHandler.getInstance().createFunction(function), c);
         }
     }
 
@@ -59,7 +59,7 @@ public class Assignment {
         ResourceBundle resourceUsage = new ResourceBundle(0,0,0);
         for (ServiceAssignment assignment: this.data.values()) {
             if (assignment.getNode() == node) {
-                resourceUsage.addResources(FunctionsHandler.getInstance().getFunctionResourceUsage(assignment.getFunction()));
+                resourceUsage.addResources(VirtualMachineHandler.getInstance().getFunctionResourceUsage(assignment.getFunction()));
             }
         }
         return resourceUsage;
@@ -74,7 +74,7 @@ public class Assignment {
 
         for (Cloudlet s: this.data.keySet()) {
             if (this.data.get(s) == null) {
-                List<Integer> possibleFunctions = FunctionsHandler.getInstance().getServiceMapping(s);
+                List<Integer> possibleFunctions = VirtualMachineHandler.getInstance().getServiceMapping(s);
                 for (Node n: nodes) {
                     for (int f: possibleFunctions) {
                         ServiceAssignment toAdd = new ServiceAssignment(s, f, n, 0);

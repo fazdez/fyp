@@ -2,8 +2,7 @@ package fazirul.fyp.dragon.main;
 
 import fazirul.fyp.dragon.app.DragonApplication;
 import fazirul.fyp.dragon.utils.Config;
-import fazirul.fyp.dragon.utils.FunctionsHandler;
-import fazirul.fyp.elements.DistributedApplication;
+import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.DistributedSimulation;
 import fazirul.fyp.elements.Node;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -16,11 +15,11 @@ public class RunSimulation {
         // initialization
         Config configManager = Config.getInstance();
         CloudSim simulation = new CloudSim();
-        FunctionsHandler functionsHandler = FunctionsHandler.getInstance();
+        VirtualMachineHandler virtualMachineHandler = VirtualMachineHandler.getInstance();
 
         HashSet<Node> nodes = configManager.getNodes(simulation);
         List<DragonApplication> applicationList = configManager.getApplications(nodes);
-        functionsHandler.registerApplications(applicationList);
+        virtualMachineHandler.registerApplications(applicationList);
 
         DistributedSimulation distributedSimulation = new DistributedSimulation();
         distributedSimulation.addApplications(applicationList);

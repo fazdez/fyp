@@ -9,13 +9,13 @@ import org.cloudbus.cloudsim.vms.VmSimple;
 import java.util.*;
 
 // Singleton class
-public class FunctionsHandler {
-    private static FunctionsHandler singleInstance = null;
+public class VirtualMachineHandler {
+    private static VirtualMachineHandler singleInstance = null;
     private final List<ResourceBundle> functions; // function_id = index in the list
     private final HashMap<Cloudlet, List<Integer>> serviceMappings = new HashMap<>();
     private static int globalID;
 
-    public FunctionsHandler() {
+    public VirtualMachineHandler() {
         functions = Config.getInstance().getFunctions();
     }
 
@@ -58,9 +58,9 @@ public class FunctionsHandler {
         return toReturn;
     }
 
-    public static FunctionsHandler getInstance() {
+    public static VirtualMachineHandler getInstance() {
         if (singleInstance == null) {
-            singleInstance = new FunctionsHandler();
+            singleInstance = new VirtualMachineHandler();
         }
         return singleInstance;
     }

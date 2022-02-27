@@ -1,6 +1,6 @@
 package fazirul.fyp.dragon.app;
 
-import fazirul.fyp.dragon.utils.FunctionsHandler;
+import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.Node;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
@@ -19,7 +19,7 @@ public class ServiceAssignment {
     }
 
     public ResourceBundle getResourcesUsed() {
-        return FunctionsHandler.getInstance().getFunctionResourceUsage(this.function);
+        return VirtualMachineHandler.getInstance().getFunctionResourceUsage(this.function);
     }
 
     public Cloudlet getService() {
