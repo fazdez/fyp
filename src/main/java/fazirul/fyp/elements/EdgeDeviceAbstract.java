@@ -128,6 +128,12 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         this.neighbours.add(neighbour);
     }
 
+    public List<ResourceBundle> getTasks() {
+        return tasks;
+    }
+
+    public HashSet<EdgeServer> getEdgeServers() { return edgeServers; }
+
     @Override
     protected void startInternal() {
         //send ArrivalEvent to itself at the arrival time

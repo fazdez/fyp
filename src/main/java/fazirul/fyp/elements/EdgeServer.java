@@ -48,6 +48,6 @@ public class EdgeServer extends DatacenterSimple{
     }
 
     public ResourceBundle getTotalResources() {
-        return totalResources;
+        return totalResources.clone();
     }
 }

@@ -1,47 +1,56 @@
 package fazirul.fyp.dragon_implementation.utils;
 
+import fazirul.fyp.dragon_implementation.dragon_device.EdgeDeviceDragon;
 import fazirul.fyp.elements.EdgeServer;
-import fazirul.fyp.elements.ResourceBundle;
 
+/**
+ * Represents a task and indicates which server and what virtual machine is this task is offloaded to.
+ *
+ * @see fazirul.fyp.dragon_implementation.dragon_device.AssignmentVector
+ */
 public class TaskAssignment {
-    private ResourceBundle task;
+    private int taskID;
     private EdgeServer server;
-    private int virtualMachineIndex;
+    private int virtualMachineID;
+    private int privateUtility = 0;
 
     /**
-     * Identifies the assignment to a server in a virtual machine for a task.
-     * @param task represented in ResourceBundle
+     * Identifies the assignment to a server in a virtual machine for a task. By default, private utility is 0.
+     * @param taskID Each task is uniquely identified in an edgeDevice by their index in the {@link EdgeDeviceDragon#getTasks() edgeDevice's task list}.
      * @param server the server assigned
-     * @param virtualMachineIndex the index that identifies the virtual machine in {@link fazirul.fyp.dragon.utils.VirtualMachineHandler}
+     * @param virtualMachineID the index that identifies the virtual machine in {@link fazirul.fyp.dragon.utils.VirtualMachineHandler}
      */
-    public TaskAssignment(ResourceBundle task, EdgeServer server, int virtualMachineIndex) {
-        this.task = task;
+    public TaskAssignment(int taskID, EdgeServer server, int virtualMachineID) {
+        this.taskID = taskID;
         this.server = server;
-        this.virtualMachineIndex = virtualMachineIndex;
+        this.virtualMachineID = virtualMachineID;
     }
 
     public EdgeServer getServer() {
         return server;
     }
 
-    public int getVirtualMachineIndex() {
-        return virtualMachineIndex;
+    public int getVirtualMachineID() {
+        return virtualMachineID;
     }
 
-    public ResourceBundle getTask() {
-        return task;
+    public int getTaskID() {
+        return taskID;
     }
 
     public void setServer(EdgeServer server) {
         this.server = server;
     }
 
-    public void setTask(ResourceBundle task) {
-        this.task = task;
+    public void setTaskID(int taskID) {
+        this.taskID = taskID;
     }
 
-    public void setVirtualMachineIndex(int virtualMachineIndex) {
-        this.virtualMachineIndex = virtualMachineIndex;
+    public void setVirtualMachineID(int virtualMachineID) {
+        this.virtualMachineID = virtualMachineID;
     }
 
+    public void setPrivateUtility(int utility) { privateUtility = utility; }
+
+    public int getPrivateUtility() { return privateUtility; }
 }
