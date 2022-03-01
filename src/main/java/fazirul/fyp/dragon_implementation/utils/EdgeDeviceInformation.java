@@ -9,20 +9,27 @@ import java.time.LocalTime;
  * See DRAGON paper for more details.
  */
 public class EdgeDeviceInformation {
+    private final int edgeDeviceID;
     private int vote;
     private ResourceBundle resource;
     private LocalTime timestamp;
 
-    public EdgeDeviceInformation() {
+    public EdgeDeviceInformation(int edgeDeviceID) {
+        this.edgeDeviceID = edgeDeviceID;
         this.vote = 0;
         this.resource = new ResourceBundle(0,0,0);
         this.timestamp = LocalTime.now();
     }
 
-    public EdgeDeviceInformation(int vote, ResourceBundle resource, LocalTime timestamp) {
+    public EdgeDeviceInformation(int edgeDeviceID, int vote, ResourceBundle resource, LocalTime timestamp) {
+        this.edgeDeviceID = edgeDeviceID;
         this.vote = vote;
         this.resource = resource;
         this.timestamp = timestamp;
+    }
+
+    public int getEdgeDeviceID() {
+        return edgeDeviceID;
     }
 
     public int getVote() {
@@ -47,5 +54,16 @@ public class EdgeDeviceInformation {
 
     public void setTimestamp(LocalTime timestamp) {
         this.timestamp = timestamp;
+    }
+
+    /**
+     * returns the ratio between vote and resourceDemanded, where the resourceDemanded is normalised against the resource available on server to get a scalar value.
+     * @param resourceAvailableOnServer resource available on the server
+     * @return the ratio
+     *
+     * @see ResourceBundle#normalise(ResourceBundle)
+     */
+    public double getVoteResourceRatio(ResourceBundle resourceAvailableOnServer) {
+        return vote/resource.normalise(resourceAvailableOnServer);
     }
 }

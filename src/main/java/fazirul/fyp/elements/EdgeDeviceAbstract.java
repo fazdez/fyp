@@ -122,8 +122,6 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         return runtime;
     }
 
-    protected void setRuntime(double runtime) { this.runtime = runtime; }
-
     public void addNeighbour(EdgeDeviceAbstract neighbour) {
         this.neighbours.add(neighbour);
     }
@@ -282,6 +280,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         }
         postProcessing();
         if (!failed) { runtime = startTime.until(LocalTime.now(), ChronoUnit.SECONDS); }
+        else { runtime = -1; }
     }
 
     /**

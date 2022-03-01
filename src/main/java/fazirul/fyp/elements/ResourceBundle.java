@@ -83,16 +83,15 @@ public class ResourceBundle {
 
     private double getQuadraticValue(ResourceBundle residualResources, int type) {
         double average = (residualResources.bandwidth + residualResources.cpu + residualResources.memory)/3.0;
-        switch(type) {
-            case CPU: //cpu
-                return Math.pow(this.cpu*(average/residualResources.cpu), 2);
-            case MEMORY: //memory
-                return Math.pow(this.memory*(average/residualResources.memory), 2);
-            case BANDWIDTH: //bandwidth
-                return Math.pow(this.bandwidth*(average/residualResources.bandwidth), 2);
-        }
-
-        return 0;
+        return switch (type) {
+            case CPU -> //cpu
+                    Math.pow(this.cpu * (average / residualResources.cpu), 2);
+            case MEMORY -> //memory
+                    Math.pow(this.memory * (average / residualResources.memory), 2);
+            case BANDWIDTH -> //bandwidth
+                    Math.pow(this.bandwidth * (average / residualResources.bandwidth), 2);
+            default -> 0;
+        };
     }
 
     public ResourceBundle clone() {

@@ -1,5 +1,6 @@
 package fazirul.fyp.dragon_implementation.dragon_device;
 
+import fazirul.fyp.dragon_implementation.utils.Election;
 import fazirul.fyp.dragon_implementation.utils.TaskAssignment;
 import fazirul.fyp.dragon_implementation.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.EdgeDeviceAbstract;
@@ -74,7 +75,6 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     public void reset() {
         setIndex(-1);
         neighbours.clear();
-        setRuntime(-1);
         incomingMessages.flush(); //could be from previous distributed simulation run, thus clear all
         failed = false;
         assignments.clear();
@@ -125,6 +125,27 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             //update globalData for its own information
             globalData.updateVoteForServer(vote, e);
             globalData.updateResourceForServer(totalResourceDemanded, e);
+        }
+    }
+
+    /**
+     * {@link #maxBidRatio} is used to bound the vote in {@link #voting()}.
+     *
+     * We have to update it everytime we run an election so that we do not give a higher vote than before.
+     * <p>See "score" function in the DRAGON paper.</p>
+     */
+    private void updateMaxBidRatio(HashMap<EdgeServer, Election> electionResults) {
+        for (EdgeServer edgeServer: getEdgeServers()) {
+            double smallestRatio = Double.MAX_VALUE;
+            Election electionResult = electionResults.get(edgeServer);
+            for (int winner: electionResult.getWinners()) {
+                double candidateSmallestRatio = globalData.getEdgeDeviceInformationForServer(winner, edgeServer).getVoteResourceRatio(edgeServer.getAvailableResources());
+                smallestRatio = Math.min(smallestRatio, candidateSmallestRatio);
+            }
+
+            if (smallestRatio < Double.MAX_VALUE) {
+                maxBidRatio.put(edgeServer, smallestRatio);
+            }
         }
     }
 }
