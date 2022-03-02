@@ -1,6 +1,7 @@
 package fazirul.fyp.elements;
 
 import org.cloudbus.cloudsim.core.CloudSimEntity;
+import org.cloudbus.cloudsim.core.CloudSimTag;
 import org.cloudbus.cloudsim.core.Simulation;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 import org.slf4j.Logger;
@@ -65,7 +66,9 @@ public class DistSimManager extends CloudSimEntity {
      * device to failedDevices list.
      */
     private void offloadEligibleEdgeDevices() {
-        for (EdgeDeviceAbstract ed: edgeDeviceList) {
+        int idx = 0;
+        while (idx < edgeDeviceList.size()) {
+            EdgeDeviceAbstract ed = edgeDeviceList.get(idx);
             if (ed.getRuntime() != -1) {
                 double offloadTime = getSimulation().clock() + ed.getRuntime();
 
@@ -92,8 +95,10 @@ public class DistSimManager extends CloudSimEntity {
                 if (numInvalidationEvents == 0) {
                     send(ed, ed.getRuntime(), DistributedSimTags.TASK_OFFLOAD_EVENT);
                 }
+                idx++;
             } else {
                 removeEdgeDevice(ed);
+                ed.shutdown();
                 failedList.add(ed);
             }
         }

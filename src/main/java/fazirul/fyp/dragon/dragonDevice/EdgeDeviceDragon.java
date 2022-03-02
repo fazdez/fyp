@@ -41,7 +41,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             Vm virtualMachine = vmHandler.createVm(t.getVirtualMachineID());
             ResourceBundle task = tasks.get(t.getTaskID());
             if (!offload(t.getServer(), virtualMachine, task)) {
-                LOGGER.error("{}: {}: Attempting to offload when resource available is not enough.", getSimulation().clockStr(), this);
+                LOGGER.error("{}: {}: Attempting to offload when resource available is not enough.", getSimulation().clockStr(), getName());
             }
         }
     }
@@ -123,7 +123,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     @Override
     protected void initialize() {
         if (!assignments.embedding(getResourceAvailableInServers())) {
-            LOGGER.info("{}: {}: Could not find suitable embedding.", getSimulation().clockStr(), this);
+            LOGGER.info("{}: {}: Could not find suitable embedding at initialization.", getSimulation().clockStr(), getName());
             failed = true;
             ended = true;
         } else {
@@ -143,7 +143,6 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         LOGGER.info("Device (index = {}): total run time = {}, is_winner = {}", getIndex(), getRuntime(), !failed);
     }
 
-    //TODO
     @Override
     public HashMap<EdgeServer, ResourceBundle> getFinalResourcesConsumption() {
         HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();

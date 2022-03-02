@@ -1,20 +1,23 @@
 package fazirul.fyp.dragon.config;
 
-class ConfigPOJO {
-    private ResourceBundlePOJO[] edgeDevices;
-    public ResourceBundlePOJO[] getEdgeDevices() {
-        return edgeDevices;
+/**
+ * Plain-Old Java Object of the config for use by {@link com.fasterxml.jackson.databind.ObjectMapper}.
+ */
+public class ConfigPOJO {
+    private ResourceBundlePOJO[] virtualMachines;
+    public ResourceBundlePOJO[] getVirtualMachines() {
+        return virtualMachines;
     }
-    public void setEdgeDevices(ResourceBundlePOJO[] edgeDevices) {
-        this.edgeDevices = edgeDevices;
+    public void setVirtualMachines(ResourceBundlePOJO[] virtualMachines) {
+        this.virtualMachines = virtualMachines;
     }
 
-    private ResourceBundlePOJO[][] applications;
-    public ResourceBundlePOJO[][] getApplications() {
-        return applications;
+    private ResourceBundlePOJO[][] edgeDevices;
+    public ResourceBundlePOJO[][] getEdgeDevices() {
+        return edgeDevices;
     }
-    public void setApplications(ResourceBundlePOJO[][] applications) {
-        this.applications = applications;
+    public void setEdgeDevices(ResourceBundlePOJO[][] edgeDevices) {
+        this.edgeDevices = edgeDevices;
     }
 
     private ResourceBundlePOJO[] edgeServers;
@@ -25,11 +28,11 @@ class ConfigPOJO {
         this.edgeServers = edgeServers;
     }
 
-    private int[] getArrivalTimes;
-    public int[] getGetArrivalTimes() {
-        return getArrivalTimes;
+    private int[] arrivalTimes;
+    public int[] getArrivalTimes() {
+        return arrivalTimes;
     }
-    public void setGetArrivalTimes(int[] getArrivalTimes) {
-        this.getArrivalTimes = getArrivalTimes;
+    public void setArrivalTimes(int[] arrivalTimes) {
+        this.arrivalTimes = arrivalTimes;
     }
 }

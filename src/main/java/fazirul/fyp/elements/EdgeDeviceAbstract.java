@@ -6,6 +6,7 @@ import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimEntity;
+import org.cloudbus.cloudsim.core.CloudSimTag;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
@@ -137,7 +138,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         //send ArrivalEvent to itself at the arrival time
         if(!schedule(arrivalTime, DistributedSimTags.ARRIVAL_EVENT)) {
             LOGGER.warn("{}: {}: Could not schedule ArrivalEvent to itself.",
-                    getSimulation().clockStr(), this);
+                    getSimulation().clockStr(), getName());
         };
 
         //add all edge servers found
@@ -147,12 +148,20 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
 
     @Override
     public void processEvent(SimEvent simEvent) {
+        if (simEvent.getTag() == CloudSimTag.SIMULATION_END) {
+            shutdown();
+            broker.shutdown();
+            return;
+        }
+
         DistSimManager manager = getDistSimManager();
         if (manager == null) {
             return;
         }
 
         if (simEvent.getTag() == DistributedSimTags.ARRIVAL_EVENT) {
+            LOGGER.info("{}: {}: Arrived into system.",
+                    getSimulation().clockStr(), getName());
             //next event will be StartAlgoEvent at the following time
             double startAlgoTime = getSimulation().clock() + WARM_UP_TIME;
 
@@ -165,7 +174,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
             if (numStartAlgoEventsAtSameTime > 1) {
                 //this should NOT happen
                 LOGGER.warn("{}: {}: There are two or more StartAlgoEvent at the same time.",
-                            getSimulation().clockStr(), this);
+                            getSimulation().clockStr(), getName());
             } else if (numStartAlgoEventsAtSameTime == 0) {
                 //if no StartAlgoEvent at the same time, proceed to send this event to the DistSimManager
                 send(manager, WARM_UP_TIME, DistributedSimTags.START_ALGORITHM_EVENT);
@@ -206,7 +215,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         if (result.isEmpty()) {
             LOGGER.warn(
                     "{}: {}: Cannot start EdgeDevice without a DistSimManager entity registered.",
-                    getSimulation().clockStr(), this);
+                    getSimulation().clockStr(), getName());
             shutdown();
             return null;
         }
@@ -283,13 +292,19 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         else { runtime = -1; }
     }
 
+    @Override
+    public void shutdown() {
+        super.shutdown();
+        broker.shutdown();
+    }
+
     /**
      * The orchestration algorithm to decide where to offload its tasks.
      * Will run in a loop until {@link #ended} is set to true.
      *
-     * Example can be found in {@link fazirul.fyp.dragon.app.DragonApplication}.
+     * Example can be found in {@link fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon}.
      *
-     * @see fazirul.fyp.dragon.app.DragonApplication
+     * @see fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon
      */
     protected abstract void orchestrate();
 

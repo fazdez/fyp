@@ -1,6 +1,7 @@
 package fazirul.fyp.dragon.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
 import fazirul.fyp.elements.EdgeServer;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -34,7 +35,7 @@ public class Config {
     }
 
     public List<ResourceBundle> getVirtualMachines() {
-        ResourceBundlePOJO[] vms = configurations.getEdgeDevices();
+        ResourceBundlePOJO[] vms = configurations.getVirtualMachines();
         List<ResourceBundle> result = new ArrayList<>();
         for (ResourceBundlePOJO vm: vms) {
             result.add(new ResourceBundle(vm.getCpu(), vm.getBandwidth(), vm.getMemory()));
@@ -43,7 +44,7 @@ public class Config {
         return result;
     }
 
-    public HashSet<EdgeServer> getEdgeServers(CloudSim sim) {
+    public HashSet<EdgeServer> createEdgeServers(CloudSim sim) {
         HashSet<EdgeServer> result = new HashSet<>();
         for (ResourceBundlePOJO n: configurations.getEdgeServers()) {
             result.add(new EdgeServer(sim, new ResourceBundle(n.getCpu(), n.getBandwidth(), n.getMemory())));
@@ -52,38 +53,24 @@ public class Config {
         return result;
     }
 
-//    public List<DragonApplication> getEdgeDevices(HashSet<EdgeServer> nodes) {
-//        int serviceID = 0;
-//        int totalNumApplications = configurations.getApplications().length;
-//        List<DragonApplication> result = new ArrayList<>();
-//        int id = 0;
-//        for (ResourceBundlePOJO[] app: configurations.getApplications()) {
-//            HashSet<Cloudlet> services = new HashSet<>();
-//            for (ResourceBundlePOJO serviceInfo: app) {
-//                Cloudlet service = new CloudletSimple(Constants.CLOUDLET_DEFAULT_MI, serviceInfo.getCpu());
-//                service.setUtilizationModelBw(new UtilizationModelAbsolute(serviceInfo.getBandwidth()));
-//                service.setUtilizationModelRam(new UtilizationModelAbsolute(serviceInfo.getMemory()));
-//                service.setId(serviceID);
-//                serviceID++;
-//
-//
-//                services.add(service);
-//            }
-//            result.add(new DragonApplication(id, nodes, totalNumApplications, services));
-//            id++;
-//        }
-//
-//        HashMap<Integer, int[]> topology = configurations.getTopology();
-//
-//        //set topology
-//        for (int app: topology.keySet()) {
-//            int[] neighbours = topology.get(app);
-//            for (int n: neighbours) {
-//                result.get(app).addNeighbour(result.get(n));
-//            }
-//        }
-//
-//        return result;
-//    }
+    public List<EdgeDeviceDragon> createEdgeDevices(CloudSim sim) {
+        List<EdgeDeviceDragon> result = new ArrayList<>();
+        int[] arrivalTimes = configurations.getArrivalTimes();
+        for(int idx = 0; idx < configurations.getEdgeDevices().length; idx++) {
+            int arrivalTime = 0; //default arrival time
+            if (idx < arrivalTimes.length) {
+                //ensure bounds
+                arrivalTime = arrivalTimes[idx];
+            }
+            ResourceBundlePOJO[] tasksPOJO = configurations.getEdgeDevices()[idx];
+            List<ResourceBundle> tasks = new ArrayList<>();
+            for (ResourceBundlePOJO rb : tasksPOJO) {
+                tasks.add(new ResourceBundle(rb.getCpu(), rb.getBandwidth(), rb.getMemory()));
+            }
+            result.add(new EdgeDeviceDragon(sim, Integer.toString(idx), arrivalTime, tasks));
+        }
+
+        return result;
+    }
 }
 

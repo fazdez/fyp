@@ -1,6 +1,9 @@
 package fazirul.fyp.dragon.config;
 
-class ResourceBundlePOJO {
+/**
+ * Plain-Old Java Object of the config for use by {@link com.fasterxml.jackson.databind.ObjectMapper}.
+ */
+public class ResourceBundlePOJO {
     private int cpu;
     public int getCpu() {
         return cpu;
