@@ -1,4 +1,4 @@
-package fazirul.fyp.dragon_implementation.config;
+package fazirul.fyp.dragon.config;
 
 class ResourceBundlePOJO {
     private int cpu;

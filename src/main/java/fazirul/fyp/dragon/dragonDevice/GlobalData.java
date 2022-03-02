@@ -1,10 +1,10 @@
-package fazirul.fyp.dragon_implementation.dragon_device;
+package fazirul.fyp.dragon.dragonDevice;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import fazirul.fyp.dragon_implementation.utils.EdgeDeviceInformation;
-import fazirul.fyp.dragon_implementation.utils.Election;
-import fazirul.fyp.dragon_implementation.utils.Message;
+import fazirul.fyp.dragon.utils.EdgeDeviceInformation;
+import fazirul.fyp.dragon.utils.Election;
+import fazirul.fyp.dragon.utils.Message;
 import fazirul.fyp.elements.EdgeServer;
 import fazirul.fyp.elements.ResourceBundle;
 

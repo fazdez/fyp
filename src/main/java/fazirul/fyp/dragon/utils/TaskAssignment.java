@@ -1,12 +1,12 @@
-package fazirul.fyp.dragon_implementation.utils;
+package fazirul.fyp.dragon.utils;
 
-import fazirul.fyp.dragon_implementation.dragon_device.EdgeDeviceDragon;
+import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
 import fazirul.fyp.elements.EdgeServer;
 
 /**
  * Represents a task and indicates which server and what virtual machine is this task is offloaded to.
  *
- * @see fazirul.fyp.dragon_implementation.dragon_device.AssignmentVector
+ * @see fazirul.fyp.dragon.dragonDevice.AssignmentVector
  */
 public class TaskAssignment {
     private int taskID;

@@ -1,6 +1,6 @@
-package fazirul.fyp.dragon_implementation.dragon_device;
+package fazirul.fyp.dragon.dragonDevice;
 
-import fazirul.fyp.dragon_implementation.utils.TaskAssignment;
+import fazirul.fyp.dragon.utils.TaskAssignment;
 import fazirul.fyp.elements.EdgeServer;
 import fazirul.fyp.elements.ResourceBundle;
 

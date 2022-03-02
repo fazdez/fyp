@@ -1,9 +1,9 @@
-package fazirul.fyp.dragon_implementation.dragon_device;
+package fazirul.fyp.dragon.dragonDevice;
 
-import fazirul.fyp.dragon_implementation.utils.Election;
-import fazirul.fyp.dragon_implementation.utils.Message;
-import fazirul.fyp.dragon_implementation.utils.TaskAssignment;
-import fazirul.fyp.dragon_implementation.utils.VirtualMachineHandler;
+import fazirul.fyp.dragon.utils.Election;
+import fazirul.fyp.dragon.utils.Message;
+import fazirul.fyp.dragon.utils.TaskAssignment;
+import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.events.SimEvent;

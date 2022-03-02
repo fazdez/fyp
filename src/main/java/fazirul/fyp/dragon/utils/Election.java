@@ -1,4 +1,4 @@
-package fazirul.fyp.dragon_implementation.utils;
+package fazirul.fyp.dragon.utils;
 
 import fazirul.fyp.elements.ResourceBundle;
 

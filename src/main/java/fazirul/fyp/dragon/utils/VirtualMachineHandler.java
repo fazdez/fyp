@@ -1,64 +1,40 @@
 package fazirul.fyp.dragon.utils;
 
-import fazirul.fyp.dragon.app.DragonApplication;
-import fazirul.fyp.dragon_implementation.config.Config;
+import fazirul.fyp.dragon.config.Config;
 import fazirul.fyp.elements.ResourceBundle;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
 
 import java.util.*;
 
-// Singleton class
+/**
+ * A singleton class that manages the information on the virtual machines (VMs). In DRAGON context, virtual machines are logically equivalent to functions.
+ *
+ * <p>The number of VMs are fixed and initialized (from a config file) once at the start of the program.
+ * Here we store templates of such VMs in a {@link #virtualMachines list}. Each VM template is represented by {@link ResourceBundle}.
+ * Each VM template is uniquely identified via its index in the list.</p>
+ */
 public class VirtualMachineHandler {
+    public static int VM_DEFAULT_MIPS = 100; //constant
+
+    /**
+     * Singleton Class logic
+     */
     private static VirtualMachineHandler singleInstance = null;
-    private final List<ResourceBundle> functions; // function_id = index in the list
-    private final HashMap<Cloudlet, List<Integer>> serviceMappings = new HashMap<>();
-    private static int globalID;
+
+    /**
+     * List of VM templates maintained by the handler. This list is fixed and final.
+     */
+    private final List<ResourceBundle> virtualMachines;
 
     public VirtualMachineHandler() {
-        functions = Config.getInstance().getFunctions();
+        virtualMachines = Config.getInstance().getVirtualMachines();
     }
 
-    public void addServiceMapping(Cloudlet service, List<Integer> possibleFunctions) {
-        serviceMappings.put(service, possibleFunctions);
-    }
-
-    //randomly maps a service to feasible functions
-    public void addServiceMapping(Cloudlet service) {
-        List<Integer> feasibleFunctions = getFeasibleFunctions(service);
-        Collections.shuffle(feasibleFunctions);
-
-        if (feasibleFunctions.size() == 0) { serviceMappings.put(service, new ArrayList<>()); return; }
-        int randomNumber = new Random().nextInt(feasibleFunctions.size() + 1);
-        if (randomNumber == 0) { randomNumber = 1; }
-        serviceMappings.put(service, feasibleFunctions.subList(0, randomNumber));
-    }
-
-    public List<Integer> getServiceMapping(Cloudlet service) {
-        return serviceMappings.get(service);
-    }
-
-    public ResourceBundle getFunctionResourceUsage(int functionID) {
-        return functions.get(functionID);
-    }
-
-    public void registerApplications(List<DragonApplication> applicationList) {
-        for (DragonApplication app: applicationList) {
-            for (Cloudlet service: app.getServices()) {
-                addServiceMapping(service);
-            }
-        }
-    }
-
-    public Vm createFunction(int functionID) {
-        ResourceBundle functionResources = functions.get(functionID);
-        Vm toReturn = new VmSimple(Constants.VM_DEFAULT_MIPS, functionResources.getCPU());
-        toReturn.setRam(functionResources.getMemory());
-        toReturn.setBw(functionResources.getBandwidth());
-        return toReturn;
-    }
-
+    /**
+     * Singleton Class logic
+     * @return the single instance of the class
+     */
     public static VirtualMachineHandler getInstance() {
         if (singleInstance == null) {
             singleInstance = new VirtualMachineHandler();
@@ -66,13 +42,36 @@ public class VirtualMachineHandler {
         return singleInstance;
     }
 
-    private List<Integer> getFeasibleFunctions(Cloudlet service) {
-        ResourceBundle resourceDemanded = new ResourceBundle(service);
-        final List<Integer> result = new ArrayList<>();
+    /**
+     * @param virtualMachineID the ID of the VM
+     * @return the resource usage of specified VM.
+     */
+    public ResourceBundle getVmResourceUsage(int virtualMachineID) {
+        return virtualMachines.get(virtualMachineID);
+    }
 
-        for (int function = 0; function < functions.size(); function++) {
-            if (functions.get(function).isBounded(resourceDemanded)) {
-                result.add(function);
+    /**
+     * @param virtualMachineID
+     * @return A {@link VmSimple} entity based on the VM template specified by the ID.
+     */
+    public Vm createVm(int virtualMachineID) {
+        ResourceBundle vmResources = virtualMachines.get(virtualMachineID);
+        Vm toReturn = new VmSimple(VM_DEFAULT_MIPS, vmResources.getCPU());
+        toReturn.setRam(vmResources.getMemory());
+        toReturn.setBw(vmResources.getBandwidth());
+        return toReturn;
+    }
+
+
+    /**
+     * @param task resource demanded by task
+     * @return A list of VM IDs that is able to satisfy the task.
+     */
+    public List<Integer> getFeasibleVirtualMachinesForTask(ResourceBundle task) {
+        List<Integer> result = new ArrayList<>();
+        for (int vm = 0; vm < virtualMachines.size(); vm++) {
+            if (virtualMachines.get(vm).isBounded(task)) {
+                result.add(vm);
             }
         }
 
