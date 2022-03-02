@@ -1,7 +1,10 @@
 package fazirul.fyp.dragon_implementation.dragon_device;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import fazirul.fyp.dragon_implementation.utils.EdgeDeviceInformation;
 import fazirul.fyp.dragon_implementation.utils.Election;
+import fazirul.fyp.dragon_implementation.utils.Message;
 import fazirul.fyp.elements.EdgeServer;
 import fazirul.fyp.elements.ResourceBundle;
 
@@ -9,7 +12,7 @@ import java.time.LocalTime;
 import java.util.*;
 
 /**
- * The data that an edge device maintains on other edge devices.
+ * The data that an edge device maintains on other edge devices. There is one instance such data for each edge device.
  */
 public class GlobalData {
     /**
@@ -188,6 +191,66 @@ public class GlobalData {
     }
 
     /**
+     * Gets the winners of the most-recently ran election. Implementation:
+     * <p>
+     * Because we know that loser votes are reset to 0 after each {@link #election()},
+     * the winners must be those whose votes are more than 0.
+     * </p>
+     * @return each server mapped to the set of edge devices that won election on the server
+     */
+    private HashMap<EdgeServer, HashSet<Integer>> getWinners() {
+        HashMap<EdgeServer, HashSet<Integer>> winnerSet = new HashMap<>();
+        for (EdgeServer edgeServer: data.keySet()) {
+            winnerSet.put(edgeServer, new HashSet<>());
+            List<EdgeDeviceInformation> serverInfo = data.get(edgeServer);
+            for (EdgeDeviceInformation edgeDeviceInformation: serverInfo) {
+                if (edgeDeviceInformation.getVote() > 0) { winnerSet.get(edgeServer).add(edgeDevice.getIndex()); }
+            }
+        }
+
+        return winnerSet;
+    }
+
+    /**
+     * Based on the messages received from neighbours, run the agreement algorithm as specified in the DRAGON paper.
+     * @return true if consensus is reached
+     */
+    protected boolean agreement(Message incomingMessage) {
+        GlobalData otherData = incomingMessage.getData();
+        HashMap<EdgeServer, HashSet<Integer>> otherDataWinners = otherData.getWinners();
+        HashMap<EdgeServer, HashSet<Integer>> currentDataWinners = getWinners();
+
+        //for each edge server, we compare the winners between the two global data
+        for (EdgeServer edgeServer: otherDataWinners.keySet()) {
+            HashSet<Integer> other = otherDataWinners.get(edgeServer);
+            HashSet<Integer> curr = currentDataWinners.get(edgeServer);
+
+            //if the winners are not the same, consensus is not reached. Update the latest information received
+            if (!other.equals(curr)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Updates information received from other devices if the timestamp is newer.
+     * @param other the other {@link GlobalData} object
+     */
+    private void update(GlobalData other) {
+        for (EdgeServer edgeServer: data.keySet()) {
+            for (int i = 0; i < data.get(edgeServer).size(); i++) {
+                EdgeDeviceInformation currInfo = getEdgeDeviceInformationForServer(i, edgeServer);
+                EdgeDeviceInformation otherInfo = other.getEdgeDeviceInformationForServer(i, edgeServer);
+
+                if (currInfo.getTimestamp().isBefore(otherInfo.getTimestamp())) {
+                    currInfo = otherInfo;
+                }
+            }
+        }
+    }
+
+    /**
      * Updates the current application's own vote for the server specified.
      * @param vote the new vote
      * @param e the edge server
@@ -206,5 +269,11 @@ public class GlobalData {
     protected void updateResourceForServer(ResourceBundle resource, EdgeServer e) {
         EdgeDeviceInformation ownInfo = data.get(e).get(edgeDevice.getIndex());
         ownInfo.setResource(resource);
+    }
+
+    public GlobalData clone() {
+        Gson gson = new GsonBuilder().create();
+        String jsonString = gson.toJson(this);
+        return gson.fromJson(jsonString, this.getClass());
     }
 }

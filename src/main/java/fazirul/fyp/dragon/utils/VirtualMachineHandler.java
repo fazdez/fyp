@@ -1,6 +1,7 @@
 package fazirul.fyp.dragon.utils;
 
 import fazirul.fyp.dragon.app.DragonApplication;
+import fazirul.fyp.dragon_implementation.config.Config;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.vms.Vm;

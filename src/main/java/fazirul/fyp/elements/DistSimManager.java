@@ -27,6 +27,14 @@ public class DistSimManager extends CloudSimEntity {
      */
     private final List<EdgeDeviceAbstract> completedList = new ArrayList<>();
 
+    /**
+     * Each device that has failed will be moved to this list.
+     * A device is considered to have failed if its runtime is still -1 even after {@link #runSimulation()}.
+     *
+     * <p>This is useful to print some statistics after the whole simulation run.</p>
+     */
+    private final List<EdgeDeviceAbstract> failedList = new ArrayList<>();
+
     public DistSimManager(Simulation simulation) {
         super(simulation);
     }
@@ -53,7 +61,8 @@ public class DistSimManager extends CloudSimEntity {
 
     /**
      * If edge device is successful in the distributed simulation (i.e. runtime != -1),
-     * create a new offload event to be handled by the edge device.
+     * create a new offload event to be handled by the edge device. If device is unsuccessful, move
+     * device to failedDevices list.
      */
     private void offloadEligibleEdgeDevices() {
         for (EdgeDeviceAbstract ed: edgeDeviceList) {
@@ -83,6 +92,9 @@ public class DistSimManager extends CloudSimEntity {
                 if (numInvalidationEvents == 0) {
                     send(ed, ed.getRuntime(), DistributedSimTags.TASK_OFFLOAD_EVENT);
                 }
+            } else {
+                removeEdgeDevice(ed);
+                failedList.add(ed);
             }
         }
     }

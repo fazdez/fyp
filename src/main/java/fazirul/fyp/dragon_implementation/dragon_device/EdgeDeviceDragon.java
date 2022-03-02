@@ -1,19 +1,20 @@
 package fazirul.fyp.dragon_implementation.dragon_device;
 
 import fazirul.fyp.dragon_implementation.utils.Election;
+import fazirul.fyp.dragon_implementation.utils.Message;
 import fazirul.fyp.dragon_implementation.utils.TaskAssignment;
 import fazirul.fyp.dragon_implementation.utils.VirtualMachineHandler;
-import fazirul.fyp.elements.EdgeDeviceAbstract;
-import fazirul.fyp.elements.EdgeServer;
-import fazirul.fyp.elements.ResourceBundle;
+import fazirul.fyp.elements.*;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 import org.cloudbus.cloudsim.vms.Vm;
 
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 
 public class EdgeDeviceDragon extends EdgeDeviceAbstract {
+    private final long TIME_TO_WAIT = 1000;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
@@ -47,28 +48,114 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
 
     @Override
     protected void orchestrate() {
+        orchestrate(false);
+    }
 
+    /**
+     * See Algorithm 1 in DRAGON paper.
+     *
+     * <p>NOTE: upon each successful agreement, we wait a certain amount of time, re-run the agreement again
+     * as a double-confirmation mechanism i.e. a device is considered completed & successful if agreement is successful
+     * two times in a row within a specified time period.
+     * </p>
+     * @param repeat if true, wait for {@link #TIME_TO_WAIT} seconds
+     */
+    private void orchestrate(boolean repeat) {
+        if (repeat) {
+            try {
+                wait(TIME_TO_WAIT);
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        List<MessageInterface> messages = incomingMessages.flush();
+        if (messages.isEmpty()) {
+            if (repeat) {
+                ended = true;
+                return;
+            }
+            orchestrate(true);
+            return;
+        }
+
+        //get the latest messages from each neighbour (in case there are more than 1 messages from the neighbour)
+        HashMap<Integer, Message> latestMessages = new HashMap<>();
+        for (MessageInterface m: messages) {
+            Message message = (Message) m;
+            if (latestMessages.get(message.getSenderID()) == null ||
+                    latestMessages.get(message.getSenderID()).getTimestamp().isBefore(message.getTimestamp())) {
+                latestMessages.put(message.getSenderID(), message);
+            }
+        }
+
+        boolean agreementSuccess = true;
+        //must agree with all incoming messages for the agreement to succeed
+        for (Message message: latestMessages.values()) {
+            if (!globalData.agreement(message)) {
+                agreementSuccess = false;
+            }
+        }
+
+
+        if (agreementSuccess) {
+            if (repeat) { ended = true; }
+            else { orchestrate(true); }
+            return;
+        }
+
+        HashMap<EdgeServer, Election> electionResults = globalData.election();
+        while(outvoted(electionResults)) {
+            updateMaxBidRatio(electionResults);
+            if (!assignments.embedding(getResidualResourcesFromElection(electionResults))) {
+                ended = true;
+                failed = true;
+                return;
+            }
+
+            voting();
+            electionResults = globalData.election();
+        }
+
+        broadcast(new Message(globalData, getIndex(), LocalTime.now()));
     }
 
     @Override
     protected void initialize() {
-
+        if (!assignments.embedding(getResourceAvailableInServers())) {
+            LOGGER.info("{}: {}: Could not find suitable embedding.", getSimulation().clockStr(), this);
+            failed = true;
+            ended = true;
+        } else {
+            voting();
+            globalData.election();
+            broadcast(new Message(globalData, getIndex(), LocalTime.now()));
+        }
     }
 
     @Override
     protected void postProcessing() {
-
+        //no need for any postprocessing here
     }
 
     @Override
     public void printResults() {
-
+        LOGGER.info("Device (index = {}): total run time = {}, is_winner = {}", getIndex(), getRuntime(), !failed);
     }
 
     //TODO
     @Override
     public HashMap<EdgeServer, ResourceBundle> getFinalResourcesConsumption() {
-        return null;
+        HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();
+        for (EdgeServer e: getEdgeServers()) {
+            result.put(e, new ResourceBundle(0,0,0));
+        }
+
+        for (TaskAssignment assignment: assignments.assignmentList) {
+            result.get(assignment.getServer()).addResources(vmHandler.getVmResourceUsage(assignment.getVirtualMachineID()));
+        }
+
+        return result;
     }
 
     @Override
@@ -126,6 +213,38 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             globalData.updateVoteForServer(vote, e);
             globalData.updateResourceForServer(totalResourceDemanded, e);
         }
+    }
+
+    /**
+     * @param electionResults each edge server mapped to their election result
+     * @return true if this edge device did not win in any election
+     */
+    private boolean outvoted(HashMap<EdgeServer, Election> electionResults) {
+        for (Election result: electionResults.values()) {
+            if (result.getWinners().contains(getIndex())) { return false; }
+        }
+        return true;
+    }
+
+    /**
+     * Each election result has a {@link Election#getResidualResources() residual resources}, which is
+     * the available resources on the server minus the resource consumption of the winners of that election.
+     *
+     * <p>
+     *     The residual resources is then used in the {@link AssignmentVector#embedding(HashMap) embedding} algorithm
+     *     to find an assignment that does not exceed the available resource on the server, taking into consideration the resources used
+     *     by the current winners.
+     * </p>
+     * @param electionResults each server mapped to their election result
+     * @return each server mapped to their election result's residual resources
+     */
+    private HashMap<EdgeServer, ResourceBundle> getResidualResourcesFromElection(HashMap<EdgeServer, Election> electionResults) {
+        HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();
+        for (EdgeServer e: electionResults.keySet()) {
+            result.put(e, electionResults.get(e).getResidualResources());
+        }
+
+        return result;
     }
 
     /**

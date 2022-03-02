@@ -1,7 +1,7 @@
 package fazirul.fyp.dragon.main;
 
 import fazirul.fyp.dragon.app.DragonApplication;
-import fazirul.fyp.dragon.utils.Config;
+import fazirul.fyp.dragon_implementation.config.Config;
 import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.DistributedSimulation;
 import fazirul.fyp.elements.Node;

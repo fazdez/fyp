@@ -94,6 +94,7 @@ public class AssignmentVector {
 
     /**
      * Find the combination of task assignments with the highest total utility where the total resource usage is bounded by the maximum resources given.
+     * This method directly modifies the assignment vector.
      *
      * @param maximumResources the bound restriction such that the assignment does not exceed this amount
      * @return true if such combination is found
