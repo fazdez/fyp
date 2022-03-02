@@ -272,8 +272,26 @@ public class GlobalData {
     }
 
     public GlobalData clone() {
-        Gson gson = new GsonBuilder().create();
-        String jsonString = gson.toJson(this);
-        return gson.fromJson(jsonString, this.getClass());
+        GlobalData copy = null;
+        for (List<EdgeDeviceInformation> list: data.values()) {
+            copy = new GlobalData(edgeDevice, list.size());
+        }
+        if (copy == null) {
+            System.out.println("ERROR: Could not create a copy of GlobalData.");
+            return null;
+        }
+
+        copy.data.forEach((k, v) -> {
+            for (int i = 0; i < v.size(); i++) {
+                EdgeDeviceInformation original = data.get(k).get(i);
+                EdgeDeviceInformation duplicate = v.get(i);
+
+                duplicate.setResource(original.getResource().clone());
+                duplicate.setVote(original.getVote());
+                duplicate.setTimestamp(original.getTimestamp());
+            }
+        });
+
+        return copy;
     }
 }
