@@ -14,8 +14,8 @@ public class Main {
         Config cfg = Config.getInstance();
         VirtualMachineHandler.getInstance();
 
-        cfg.createEdgeDevices(simulation);
         cfg.createEdgeServers(simulation);
+        cfg.createEdgeDevices(simulation);
 
         simulation.start();
     }

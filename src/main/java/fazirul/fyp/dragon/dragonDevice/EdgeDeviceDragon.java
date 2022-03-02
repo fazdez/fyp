@@ -12,6 +12,7 @@ import org.cloudbus.cloudsim.vms.Vm;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     private final long TIME_TO_WAIT = 1000;
@@ -63,7 +64,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     private void orchestrate(boolean repeat) {
         if (repeat) {
             try {
-                wait(TIME_TO_WAIT);
+                TimeUnit.MILLISECONDS.sleep(TIME_TO_WAIT);
             } catch(Exception e) {
                 e.printStackTrace();
             }
