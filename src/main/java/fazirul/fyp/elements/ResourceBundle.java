@@ -99,6 +99,6 @@ public class ResourceBundle {
     }
 
     public String toString() {
-        return MessageFormat.format("(cpu = {0}, bw = {1}, memory = {2})", getCPU(), getBandwidth(), getMemory());
+        return MessageFormat.format("(cpu = {0}, memory = {1}, bw = {2})", getCPU(), getMemory(), getBandwidth());
     }
 }

@@ -93,6 +93,8 @@ public class DistSimManager extends CloudSimEntity {
                 });
 
                 if (numInvalidationEvents == 0) {
+//                    LOGGER.info("{}: {}: {} successful in distributed simulation. Runtime = {}",
+//                            getSimulation().clockStr(), getName(), ed.getName(), ed.getRuntime());
                     send(ed, ed.getRuntime(), DistributedSimTags.TASK_OFFLOAD_EVENT);
                 }
                 idx++;
@@ -111,6 +113,8 @@ public class DistSimManager extends CloudSimEntity {
      * @see EdgeDeviceAbstract#startDistributedAlgorithm()
      */
     private void runSimulation() {
+        LOGGER.info("{}: {} starting Distributed Simulation with {} participating devices...",
+                getSimulation().clockStr(), getName(), getNumParticipatingEntities());
         List<Thread> threads = new ArrayList<>();
         for (EdgeDeviceAbstract ed : edgeDeviceList) {
             threads.add(new Thread(ed::startDistributedAlgorithm));
@@ -126,6 +130,10 @@ public class DistSimManager extends CloudSimEntity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        for (EdgeDeviceAbstract ed: edgeDeviceList) {
+            ed.printResults();
         }
     }
 

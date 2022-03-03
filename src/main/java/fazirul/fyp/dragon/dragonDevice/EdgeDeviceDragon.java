@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class EdgeDeviceDragon extends EdgeDeviceAbstract {
-    private final long TIME_TO_WAIT = 1000;
+    private final long TIME_TO_WAIT = 900;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
@@ -33,7 +33,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     @Override
     protected void handleTaskOffloadEvent(SimEvent evt) {
         if (!assignments.isOffloadPossible()) {
-            LOGGER.warn("{}: {}: Not enough resources available for the edge device to offload its tasks.", getSimulation().clockStr(), this);
+            LOGGER.warn("{}: {}: Not enough resources available for the edge device to offload its tasks.", getSimulation().clockStr(), getName());
             //TODO: Some post-debugging logic to identify why this is the case.
             return;
         }
@@ -95,6 +95,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         for (Message message: latestMessages.values()) {
             if (!globalData.agreement(message)) {
                 agreementSuccess = false;
+                break;
             }
         }
 
@@ -103,6 +104,11 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             if (repeat) { ended = true; }
             else { orchestrate(true); }
             return;
+        }
+
+        //agreement failed, update the new info from messages received
+        for (Message message: latestMessages.values()) {
+            globalData.update(message.getData());
         }
 
         HashMap<EdgeServer, Election> electionResults = globalData.election();
@@ -131,6 +137,12 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             voting();
             globalData.election();
             broadcast(new Message(globalData, getIndex(), LocalTime.now()));
+            try{
+                //wait a short amount of time for the respective
+                TimeUnit.MILLISECONDS.sleep(TIME_TO_WAIT);
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -142,6 +154,11 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     @Override
     public void printResults() {
         LOGGER.info("Device (index = {}): total run time = {}, is_winner = {}", getIndex(), getRuntime(), !failed);
+        HashMap<EdgeServer, ResourceBundle> resourceConsumption = getFinalResourcesConsumption();
+        for (EdgeServer e: resourceConsumption.keySet()) {
+            ResourceBundle consumption = resourceConsumption.get(e);
+            LOGGER.info("{}: {} on {}", getName(), consumption, e.getName());
+        }
     }
 
     @Override
@@ -200,6 +217,8 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
                 totalResourceDemanded.addResources(vmHandler.getVmResourceUsage(t.getVirtualMachineID()));
             }
 
+            if (totalPrivateUtility == 0) { continue; } //the device does not have any assignment on this server.
+
             //total resource demanded is a 3-dimensional vector, we have to normalise it to get a number
             double normalisedResource = totalResourceDemanded.normalise(e.getAvailableResources());
 
@@ -251,8 +270,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      * {@link #maxBidRatio} is used to bound the vote in {@link #voting()}.
      *
      * We have to update it everytime we run an election so that we do not give a higher vote than before.
-     * <p>See "score" function in the DRAGON paper.</p>
-     */
+     * <p>See "score" function in the DRAGON paper.</p>*/
     private void updateMaxBidRatio(HashMap<EdgeServer, Election> electionResults) {
         for (EdgeServer edgeServer: getEdgeServers()) {
             double smallestRatio = Double.MAX_VALUE;

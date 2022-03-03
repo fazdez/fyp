@@ -44,7 +44,14 @@ public class AssignmentVector {
         int taskID = 0;
         for (ResourceBundle task: edgeDevice.getTasks()) {
             List<Integer> feasibleVms = edgeDevice.vmHandler.getFeasibleVirtualMachinesForTask(task);
+
+            //pick a random selection from the list of feasible Vms.
             Collections.shuffle(feasibleVms);
+            int randomNumber = new Random().nextInt(feasibleVms.size() + 1);
+            if (randomNumber == 0) { randomNumber = 1; }
+            feasibleVms = feasibleVms.subList(0, randomNumber);
+
+
             for (int virtualMachineID: feasibleVms) {
                 for (EdgeServer e: edgeDevice.getEdgeServers()) {
                     TaskAssignment toAdd = new TaskAssignment(taskID, e, virtualMachineID);
@@ -62,7 +69,7 @@ public class AssignmentVector {
      * For each task in the {@link #assignmentList}, clear the assignment by setting it to null.
      */
     protected void clear() {
-        assignmentList.forEach(t -> t = null);
+        assignmentList.replaceAll(t -> null);
     }
 
     /**

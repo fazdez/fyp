@@ -47,7 +47,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     /**
      * List of edge devices connected to the current device.
      */
-    
+
     protected final List<EdgeDeviceAbstract> neighbours = new ArrayList<>();
 
     /**
@@ -104,6 +104,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         super(simulation);
         setName(DEFAULT_NAME + username);
         broker = new DatacenterBrokerSimple(simulation, DEFAULT_NAME + username);
+        broker.setVmDestructionDelay(0.2);
         //add all edge servers found. IMPORTANT, Edge servers MUST be created BEFORE edge device created!
         getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof EdgeServer)
                 .forEach(simEntity -> edgeServers.add((EdgeServer) simEntity));
@@ -148,8 +149,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     @Override
     public void processEvent(SimEvent simEvent) {
         if (simEvent.getTag() == CloudSimTag.SIMULATION_END) {
-            shutdown();
-            broker.shutdown();
+//            broker.shutdown();
             return;
         }
 
@@ -178,13 +178,10 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
                 //if no StartAlgoEvent at the same time, proceed to send this event to the DistSimManager
                 send(manager, WARM_UP_TIME, DistributedSimTags.START_ALGORITHM_EVENT);
             }
-        } else if (simEvent.getTag() == DistributedSimTags.TASK_OFFLOAD_EVENT){
+        } else if (simEvent.getTag() == DistributedSimTags.TASK_OFFLOAD_EVENT) {
             manager.removeEdgeDevice(this);
             handleTaskOffloadEvent(simEvent);
             manager.addToCompletedList(this);
-        } else {
-            //this entity is only programmed to receive the two events above
-            shutdown();
         }
     }
 
@@ -280,20 +277,20 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     /**
      * Used only for use by {@link DistSimManager}. Not to be modified.
      */
-    protected void startDistributedAlgorithm() {
+    public void startDistributedAlgorithm() {
         LocalTime startTime = LocalTime.now();
         initialize();
         while (!ended) {
             orchestrate();
         }
         postProcessing();
-        if (!failed) { runtime = startTime.until(LocalTime.now(), ChronoUnit.SECONDS); }
+        if (!failed) { runtime = startTime.until(LocalTime.now(), ChronoUnit.MILLIS)/1000.0; }
         else { runtime = -1; }
     }
 
     @Override
     public void shutdown() {
-        super.shutdown();
+//        super.shutdown();
         broker.shutdown();
     }
 

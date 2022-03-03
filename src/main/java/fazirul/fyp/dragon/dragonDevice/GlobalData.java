@@ -23,7 +23,16 @@ public class GlobalData {
      */
     private final HashMap<EdgeServer, List<EdgeDeviceInformation>> data = new HashMap<>();
 
+    /**
+     * The edge device that this GlobalData belongs to.
+     */
     private final EdgeDeviceDragon edgeDevice;
+
+
+    /**
+     * The winners of the most recently computed election.
+     */
+    private final HashMap<EdgeServer, HashSet<Integer>> electionWinners = new HashMap<>();
 
     /**
      * @param edgeDevice the edge device that is maintaining such information
@@ -38,6 +47,8 @@ public class GlobalData {
                 deviceInformations.add(new EdgeDeviceInformation(i));
             }
             data.put(e, deviceInformations);
+
+            electionWinners.put(e, new HashSet<>()); // initialize election winners to be null.
         }
     }
 
@@ -46,7 +57,12 @@ public class GlobalData {
      * @return Election results in each edge server
      */
     protected HashMap<EdgeServer, Election> election() {
-        return election(new HashSet<>());
+        HashMap<EdgeServer, Election> results = election(new HashSet<>());
+        for (EdgeServer e: results.keySet()) {
+            electionWinners.put(e, new HashSet<>(results.get(e).getWinners())); //update the winners
+        }
+
+        return results;
     }
 
     /**
@@ -99,6 +115,7 @@ public class GlobalData {
                 -device.getVoteResourceRatio(e.getAvailableResources()))); //then sort based on vote:resource ratio
 
         for (EdgeDeviceInformation edi: sortedEdgeDeviceInformation) {
+            if (edi.getVote() == 0) { break; }
             if (blacklistedDevices.contains(edi.getEdgeDeviceID()) ||
                     !electionResult.getResidualResources().isBounded(edi.getResource())) { continue; }
 
@@ -109,6 +126,7 @@ public class GlobalData {
 
         //losers are those that voted but did not win
         for (EdgeDeviceInformation edi: sortedEdgeDeviceInformation) {
+            if (edi.getVote() == 0) { break; }
             if (!electionResult.getWinners().contains(edi.getEdgeDeviceID()) && edi.getVote() > 0) {
                 electionResult.addLoser(edi.getEdgeDeviceID());
             }
@@ -199,16 +217,7 @@ public class GlobalData {
      * @return each server mapped to the set of edge devices that won election on the server
      */
     private HashMap<EdgeServer, HashSet<Integer>> getWinners() {
-        HashMap<EdgeServer, HashSet<Integer>> winnerSet = new HashMap<>();
-        for (EdgeServer edgeServer: data.keySet()) {
-            winnerSet.put(edgeServer, new HashSet<>());
-            List<EdgeDeviceInformation> serverInfo = data.get(edgeServer);
-            for (EdgeDeviceInformation edgeDeviceInformation: serverInfo) {
-                if (edgeDeviceInformation.getVote() > 0) { winnerSet.get(edgeServer).add(edgeDevice.getIndex()); }
-            }
-        }
-
-        return winnerSet;
+        return electionWinners;
     }
 
     /**
@@ -237,14 +246,15 @@ public class GlobalData {
      * Updates information received from other devices if the timestamp is newer.
      * @param other the other {@link GlobalData} object
      */
-    private void update(GlobalData other) {
+    protected void update(GlobalData other) {
         for (EdgeServer edgeServer: data.keySet()) {
             for (int i = 0; i < data.get(edgeServer).size(); i++) {
                 EdgeDeviceInformation currInfo = getEdgeDeviceInformationForServer(i, edgeServer);
                 EdgeDeviceInformation otherInfo = other.getEdgeDeviceInformationForServer(i, edgeServer);
 
+                //curr info is outdated
                 if (currInfo.getTimestamp().isBefore(otherInfo.getTimestamp())) {
-                    currInfo = otherInfo;
+                    data.get(edgeServer).set(i, otherInfo);
                 }
             }
         }
@@ -275,7 +285,9 @@ public class GlobalData {
         GlobalData copy = null;
         for (List<EdgeDeviceInformation> list: data.values()) {
             copy = new GlobalData(edgeDevice, list.size());
+            break;
         }
+
         if (copy == null) {
             System.out.println("ERROR: Could not create a copy of GlobalData.");
             return null;
@@ -292,6 +304,7 @@ public class GlobalData {
             }
         });
 
+        copy.electionWinners.forEach((k, v) -> v.addAll(electionWinners.get(k)) );
         return copy;
     }
 }
