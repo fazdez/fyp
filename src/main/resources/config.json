@@ -33,5 +33,5 @@
     { "cpu":  12, "memory":  8192, "bandwidth":  4096 },
     { "cpu":  4, "memory":  2048, "bandwidth":  1024 }
   ],
-  "arrivalTimes": []
+  "arrivalTimes": [0, 0, 0, 2]
 }

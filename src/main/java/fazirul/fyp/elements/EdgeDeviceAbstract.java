@@ -32,6 +32,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     private static final String DEFAULT_NAME = "EdgeDevice_";
     private static final int DEFAULT_CLOUDLET_LENGTH = 100;
     public static final double WARM_UP_TIME = 0.5;
+    private static int VM_ID =0;
 
     /**
      * <p>For communication to the edge server</p>
@@ -256,6 +257,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     protected boolean offload(EdgeServer server, Vm virtualMachine, ResourceBundle task) {
         if (!checkIfOffloadPossible(server, virtualMachine)) { return false; }
         broker.setDatacenterMapper((dc, u) -> server);
+        virtualMachine.setId(VM_ID++);
         broker.submitVm(virtualMachine);
 
         ArrayList<Cloudlet> cloudletList = new ArrayList<>();

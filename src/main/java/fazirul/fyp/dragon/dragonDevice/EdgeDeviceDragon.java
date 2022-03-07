@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class EdgeDeviceDragon extends EdgeDeviceAbstract {
-    private final long TIME_TO_WAIT = 900;
+    private final long TIME_TO_WAIT = 500;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
