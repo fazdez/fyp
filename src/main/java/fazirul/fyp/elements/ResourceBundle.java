@@ -3,6 +3,7 @@ package fazirul.fyp.elements;
 
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
+import org.cloudbus.cloudsim.vms.Vm;
 
 import java.text.MessageFormat;
 
@@ -30,6 +31,12 @@ public class ResourceBundle {
         if (service.getUtilizationModelBw().getUnit() == UtilizationModel.Unit.PERCENTAGE || service.getUtilizationModelRam().getUnit() == UtilizationModel.Unit.PERCENTAGE) {
             System.out.println("creating ResourceBundle: invalid definition of cloudlet");
         }
+    }
+
+    public ResourceBundle(Vm virtualMachine) {
+        this.cpu = (int) virtualMachine.getNumberOfPes();
+        this.bandwidth = (int) virtualMachine.getBw().getCapacity();
+        this.memory = (int) virtualMachine.getRam().getCapacity();
     }
 
     public int getCPU() {
@@ -76,16 +83,15 @@ public class ResourceBundle {
 
     private double getQuadraticValue(ResourceBundle residualResources, int type) {
         double average = (residualResources.bandwidth + residualResources.cpu + residualResources.memory)/3.0;
-        switch(type) {
-            case CPU: //cpu
-                return Math.pow(this.cpu*(average/residualResources.cpu), 2);
-            case MEMORY: //memory
-                return Math.pow(this.memory*(average/residualResources.memory), 2);
-            case BANDWIDTH: //bandwidth
-                return Math.pow(this.bandwidth*(average/residualResources.bandwidth), 2);
-        }
-
-        return 0;
+        return switch (type) {
+            case CPU -> //cpu
+                    Math.pow(this.cpu * (average / residualResources.cpu), 2);
+            case MEMORY -> //memory
+                    Math.pow(this.memory * (average / residualResources.memory), 2);
+            case BANDWIDTH -> //bandwidth
+                    Math.pow(this.bandwidth * (average / residualResources.bandwidth), 2);
+            default -> 0;
+        };
     }
 
     public ResourceBundle clone() {
@@ -93,6 +99,6 @@ public class ResourceBundle {
     }
 
     public String toString() {
-        return MessageFormat.format("(cpu = {0}, bw = {1}, memory = {2})", getCPU(), getBandwidth(), getMemory());
+        return MessageFormat.format("(cpu = {0}, memory = {1}, bw = {2})", getCPU(), getMemory(), getBandwidth());
     }
 }
