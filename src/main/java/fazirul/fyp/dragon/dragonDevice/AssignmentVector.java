@@ -54,6 +54,12 @@ public class AssignmentVector {
             Collections.shuffle(feasibleVms);
             int randomNumber = new Random().nextInt(feasibleVms.size() + 1);
             if (randomNumber == 0) { randomNumber = 1; }
+            if (feasibleVms.isEmpty()) {
+                continue;
+            }
+            if (randomNumber > 3) {
+                randomNumber = 3;
+            }
             feasibleVms = feasibleVms.subList(0, randomNumber);
 
 

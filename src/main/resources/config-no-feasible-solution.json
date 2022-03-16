@@ -22,8 +22,5 @@
     { "cpu":  4, "memory":  2048, "bandwidth":  1024 },
     { "cpu":  4, "memory":  2048, "bandwidth":  1024 }
   ],
-  "topology": {
-    "0": ["1"],
-    "1": ["0"]
-  }
+  "topology": {}
 }

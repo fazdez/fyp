@@ -21,16 +21,17 @@ public class GoogleTraceReaderExample {
     }
 
     private GoogleTraceReaderExample() {
-        SIMULATION = new CloudSim();
+        SIMULATION = new CloudSim(1 );
         DistSimManager distSimManager = new DistSimManager(SIMULATION);
 
         //initialize SINGLETON classes
         Config cfg = Config.getInstance();
+        cfg.setConfigPath(Config.filenameGoogleTraceDataSet);
         VirtualMachineHandler.getInstance();
 
         cfg.createEdgeServers(SIMULATION);
         try {
-            GoogleTraceReader reader = new GoogleTraceReader(SIMULATION, "task-events-sample-1.csv", this::createCloudlet, this::createEdgeDevice);
+            GoogleTraceReader reader = new GoogleTraceReader(SIMULATION, "task-events-sample-2.csv", this::createCloudlet, this::createEdgeDevice);
             reader.process();
         } catch (Exception e) {
             e.printStackTrace();

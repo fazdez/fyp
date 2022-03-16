@@ -1,5 +1,6 @@
 package fazirul.fyp.elements;
 
+import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -8,10 +9,8 @@ import org.cloudsimplus.traces.google.GoogleTaskEventsTraceReader;
 import org.cloudsimplus.traces.google.TaskEvent;
 import org.cloudsimplus.traces.google.TaskEventType;
 
-import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -22,8 +21,11 @@ import java.util.function.Function;
  */
 public class GoogleTraceReader extends GoogleTaskEventsTraceReader  {
     private final HashMap<String, EdgeDeviceAbstract> edgeDevices = new HashMap<>();
-    private final HashSet<String> addedTasks = new HashSet<>();
+    private final HashMap<String, Integer> jobIDToTaskIndexMapping = new HashMap<>();
+    private final HashMap<String, EdgeDeviceAbstract> jobIDToEdgeDeviceMapping = new HashMap<>();
+    private final HashMap<Double, Integer> arrivalEventCount = new HashMap<>();
 
+    private static final int MAX_EVENTS = 50;
     private final Function<TaskEvent, EdgeDeviceAbstract> edgeDeviceCreateFunction;
     private final ResourceBundle resourceAvailableOnSingleServer;
 
@@ -61,29 +63,47 @@ public class GoogleTraceReader extends GoogleTaskEventsTraceReader  {
         "abc1" with 1 task is another distributed application even though it is technically from the same broker!!
          */
         final var event = TaskEvent.of(this);
-        if (event.getType() != TaskEventType.SUBMIT) {
-            return true; // only process submit events which are essentially the arrival event
+        if (event.getType() != TaskEventType.SUBMIT && event.getType() != TaskEventType.FINISH) {
+            return true;
         }
+
+        if (event.getTaskIndex() > 0) { return true; } //only process tasks with index == 0;
 
         String edgeDeviceUserName = createEdgeDeviceUsername(event);
-        String taskIdentifier = edgeDeviceUserName + "_" + event.getJobId();
-
-        if (addedTasks.contains(taskIdentifier)) {
-            return true; //don't process duplicate tasks
+        String taskIdentifier = event.getUserName() + "_" + event.getJobId();
+        EdgeDeviceAbstract edgeDevice;
+        if (event.getType() == TaskEventType.FINISH) {
+            if (jobIDToTaskIndexMapping.get(taskIdentifier) == null || jobIDToEdgeDeviceMapping.get(taskIdentifier) == null) {
+                return true;
+            }
+            edgeDevice = jobIDToEdgeDeviceMapping.get(taskIdentifier);
+            if (!(edgeDevice instanceof EdgeDeviceDragon)) {
+                return true; //TODO: do for all EdgeDeviceAbstract types?
+            }
+            int taskIndex = jobIDToTaskIndexMapping.get(taskIdentifier);
+            double duration = event.getTimestamp() - edgeDevice.getArrivalTime();
+            ((EdgeDeviceDragon) edgeDevice).addTaskLength(taskIndex, duration);
+            return true;
         }
 
+        if (arrivalEventCount.get(event.getTimestamp()) != null && arrivalEventCount.get(event.getTimestamp()) == MAX_EVENTS) {
+            return true; //don't process anymore...
+        }
 
-        EdgeDeviceAbstract edgeDevice = edgeDevices.get(edgeDeviceUserName);
+        edgeDevice = edgeDevices.get(edgeDeviceUserName);
         if (edgeDevice == null) {
             //create new
             edgeDevice = edgeDeviceCreateFunction.apply(event);
             edgeDevices.put(edgeDeviceUserName, edgeDevice);
-
         }
+        if (edgeDevice.tasks.size() > 10 ) { return true; }
 
         ResourceBundle task = createTaskFromEvent(event);
+        jobIDToTaskIndexMapping.put(taskIdentifier, edgeDevice.tasks.size());
+        jobIDToEdgeDeviceMapping.put(taskIdentifier, edgeDevice);
         edgeDevice.addTask(task);
-        addedTasks.add(taskIdentifier);
+        int currentEventCount = arrivalEventCount.get(event.getTimestamp()) == null ? 0 : arrivalEventCount.get(event.getTimestamp());
+        arrivalEventCount.put(event.getTimestamp(), currentEventCount+1);
         return true;
     }
 

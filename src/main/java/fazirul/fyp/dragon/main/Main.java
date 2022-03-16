@@ -12,6 +12,7 @@ public class Main {
 
         //initialize SINGLETON classes
         Config cfg = Config.getInstance();
+        cfg.setConfigPath(Config.filename);
         VirtualMachineHandler.getInstance();
 
         cfg.createEdgeServers(simulation);

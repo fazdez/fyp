@@ -22,6 +22,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
+    private final HashMap<Integer, Double> taskLength = new HashMap<>();
 
 
     protected final VirtualMachineHandler vmHandler = VirtualMachineHandler.getInstance();
@@ -40,6 +41,10 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         assignments.addTask(task);
     }
 
+    public void addTaskLength(int taskIndex, double duration) {
+        taskLength.put(taskIndex, duration);
+    }
+
     //TODO
     @Override
     protected void handleTaskOffloadEvent(SimEvent evt) {
@@ -54,6 +59,10 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             ResourceBundle task = tasks.get(t.getTaskID());
             CloudletSimple cloudlet = new CloudletSimple(CLOUDLET_LENGTH, task.getCPU());
             cloudlet.setUtilizationModel(new UtilizationModelFull());
+            if (taskLength.get(t.getTaskID()) != null) {
+                cloudlet.setLength(taskLength.get(t.getTaskID()).longValue());
+            }
+
             if (!offload(t.getServer(), virtualMachine, cloudlet)) {
                 LOGGER.error("{}: {}: Attempting to offload when resource available is not enough.", getSimulation().clockStr(), getName());
             }

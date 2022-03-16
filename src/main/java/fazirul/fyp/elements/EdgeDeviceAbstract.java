@@ -105,13 +105,17 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         super(simulation);
         setName(DEFAULT_NAME + username);
         broker = new DatacenterBrokerSimple(simulation, DEFAULT_NAME + username);
-        broker.setVmDestructionDelay(0.2);
+//        broker.setVmDestructionDelay(1.01);
         //add all edge servers found. IMPORTANT, Edge servers MUST be created BEFORE edge device created!
         getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof EdgeServer)
                 .forEach(simEntity -> edgeServers.add((EdgeServer) simEntity));
         this.username = username;
         this.arrivalTime = arrivalTime;
         this.tasks = tasks;
+    }
+
+    public double getArrivalTime() {
+        return this.arrivalTime;
     }
 
     public void setIndex(int id) {
