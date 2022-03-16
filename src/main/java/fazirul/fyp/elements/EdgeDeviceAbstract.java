@@ -258,16 +258,14 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * @param task the task to offload
      * @return true if the task was offloaded
      */
-    protected boolean offload(EdgeServer server, Vm virtualMachine, ResourceBundle task) {
+    protected boolean offload(EdgeServer server, Vm virtualMachine, Cloudlet task) {
         if (!checkIfOffloadPossible(server, virtualMachine)) { return false; }
         broker.setDatacenterMapper((dc, u) -> server);
         virtualMachine.setId(VM_ID++);
         broker.submitVm(virtualMachine);
 
         ArrayList<Cloudlet> cloudletList = new ArrayList<>();
-        Cloudlet cloudlet = new CloudletSimple(DEFAULT_CLOUDLET_LENGTH, task.getCPU());
-        cloudlet.setUtilizationModel(new UtilizationModelFull());
-        cloudletList.add(cloudlet);
+        cloudletList.add(task);
         broker.submitCloudletList(cloudletList, virtualMachine);
 
         return true;

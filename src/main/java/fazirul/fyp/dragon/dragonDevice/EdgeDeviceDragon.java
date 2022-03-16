@@ -5,8 +5,10 @@ import fazirul.fyp.dragon.utils.Message;
 import fazirul.fyp.dragon.utils.TaskAssignment;
 import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.*;
+import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.events.SimEvent;
+import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
 import org.cloudbus.cloudsim.vms.Vm;
 
 import java.time.LocalTime;
@@ -15,10 +17,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class EdgeDeviceDragon extends EdgeDeviceAbstract {
+    private static final long CLOUDLET_LENGTH = 1;
     private final long TIME_TO_WAIT = 500;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
+
 
     protected final VirtualMachineHandler vmHandler = VirtualMachineHandler.getInstance();
 
@@ -48,7 +52,9 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         for (TaskAssignment t: assignments.assignmentList) {
             Vm virtualMachine = vmHandler.createVm(t.getVirtualMachineID());
             ResourceBundle task = tasks.get(t.getTaskID());
-            if (!offload(t.getServer(), virtualMachine, task)) {
+            CloudletSimple cloudlet = new CloudletSimple(CLOUDLET_LENGTH, task.getCPU());
+            cloudlet.setUtilizationModel(new UtilizationModelFull());
+            if (!offload(t.getServer(), virtualMachine, cloudlet)) {
                 LOGGER.error("{}: {}: Attempting to offload when resource available is not enough.", getSimulation().clockStr(), getName());
             }
         }
