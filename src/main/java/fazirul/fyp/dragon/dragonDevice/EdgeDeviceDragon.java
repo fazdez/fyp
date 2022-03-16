@@ -29,6 +29,13 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         getEdgeServers().forEach(e -> maxBidRatio.put(e, Double.MAX_VALUE));
     }
 
+
+    @Override
+    public void addTask(ResourceBundle task) {
+        super.addTask(task);
+        assignments.addTask(task);
+    }
+
     //TODO
     @Override
     protected void handleTaskOffloadEvent(SimEvent evt) {
@@ -169,6 +176,9 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         }
 
         for (TaskAssignment assignment: assignments.assignmentList) {
+            if (assignment == null) {
+                continue;
+            }
             result.get(assignment.getServer()).addResources(vmHandler.getVmResourceUsage(assignment.getVirtualMachineID()));
         }
 

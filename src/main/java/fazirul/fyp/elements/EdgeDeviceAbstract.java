@@ -136,6 +136,10 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         return tasks;
     }
 
+    public void addTask(ResourceBundle task) {
+        tasks.add(task);
+    }
+
     public HashSet<EdgeServer> getEdgeServers() { return edgeServers; }
 
     @Override

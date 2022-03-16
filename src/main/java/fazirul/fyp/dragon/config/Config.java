@@ -14,6 +14,7 @@ public class Config {
     private static final String filename = "/config.json";
     private static final String testFilename = "/config-test-single-application.json";
     private static final String filename_nofeasiblesolution = "/config-no-feasible-solution.json";
+    private static final String filenameGoogleTraceDataSet = "/config-google.json";
     private static Config singleInstance = null;
     private ConfigPOJO configurations;
 
@@ -32,6 +33,15 @@ public class Config {
         }
 
         return singleInstance;
+    }
+
+    public void setConfigPath(String configPath) {
+        ObjectMapper om = new ObjectMapper();
+        try {
+            configurations = om.readValue(getClass().getResourceAsStream(configPath), ConfigPOJO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public List<ResourceBundle> getVirtualMachines() {

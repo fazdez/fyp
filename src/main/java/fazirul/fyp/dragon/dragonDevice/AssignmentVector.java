@@ -36,6 +36,11 @@ public class AssignmentVector {
         generateRandomUtility();
     }
 
+    public void addTask(ResourceBundle task) {
+        assignmentList.add(null);
+        generateRandomUtility();
+    }
+
     /**
      * For each possible assignment, generate a random private utility and add this assignment to {@link #possibleAssignments}.
      * Sort the list based on private utility generated.
