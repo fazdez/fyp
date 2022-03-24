@@ -1,6 +1,5 @@
 package fazirul.fyp.elements;
 
-import org.apache.commons.math3.geometry.spherical.twod.Edge;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
@@ -9,7 +8,6 @@ import org.cloudbus.cloudsim.core.CloudSimEntity;
 import org.cloudbus.cloudsim.core.CloudSimTag;
 import org.cloudbus.cloudsim.core.SimEntity;
 import org.cloudbus.cloudsim.core.events.SimEvent;
-import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelFull;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,7 @@ import java.util.*;
  *     <li>An {@link #orchestrate() orchestration algorithm}</li>
  * </ul>
  */
-public abstract class EdgeDeviceAbstract extends CloudSimEntity {
+public abstract class DistributedApplication extends CloudSimEntity {
     protected static final Logger LOGGER = LoggerFactory.getLogger(CloudSimEntity.class.getSimpleName());
     private static final String DEFAULT_NAME = "EdgeDevice_";
     private static final int DEFAULT_CLOUDLET_LENGTH = 100;
@@ -49,7 +47,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * List of edge devices connected to the current device.
      */
 
-    protected final List<EdgeDeviceAbstract> neighbours = new ArrayList<>();
+    protected final List<DistributedApplication> neighbours = new ArrayList<>();
 
     /**
      * Incoming {@link MessageQueue message queue}.
@@ -99,16 +97,16 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     /**
      *
      */
-    private final HashSet<EdgeServer> edgeServers = new HashSet<>();
+    private final HashSet<Server> servers = new HashSet<>();
 
-    public EdgeDeviceAbstract(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
+    public DistributedApplication(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
         super(simulation);
         setName(DEFAULT_NAME + username);
         broker = new DatacenterBrokerSimple(simulation, DEFAULT_NAME + username);
 //        broker.setVmDestructionDelay(1.01);
         //add all edge servers found. IMPORTANT, Edge servers MUST be created BEFORE edge device created!
-        getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof EdgeServer)
-                .forEach(simEntity -> edgeServers.add((EdgeServer) simEntity));
+        getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof Server)
+                .forEach(simEntity -> servers.add((Server) simEntity));
         this.username = username;
         this.arrivalTime = arrivalTime;
         this.tasks = tasks;
@@ -132,7 +130,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         return runtime;
     }
 
-    public void addNeighbour(EdgeDeviceAbstract neighbour) {
+    public void addNeighbour(DistributedApplication neighbour) {
         this.neighbours.add(neighbour);
     }
 
@@ -144,7 +142,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
         tasks.add(task);
     }
 
-    public HashSet<EdgeServer> getEdgeServers() { return edgeServers; }
+    public HashSet<Server> getEdgeServers() { return servers; }
 
     @Override
     protected void startInternal() {
@@ -175,9 +173,9 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
 
             //check if the next event will be at the same time as any future StartAlgoEvent
             long numStartAlgoEventsAtSameTime = getSimulation().getNumberOfFutureEvents(evt -> evt.getTag() == DistributedSimTags.START_ALGORITHM_EVENT
-                    && evt.getSource() instanceof EdgeDeviceAbstract && evt.getTime() == startAlgoTime);
+                    && evt.getSource() instanceof DistributedApplication && evt.getTime() == startAlgoTime);
 
-            getDistSimManager().addEdgeDevice(this); //register the edge device to the DistSimManager
+            getDistSimManager().addApplication(this); //register the edge device to the DistSimManager
 
             if (numStartAlgoEventsAtSameTime > 1) {
                 //this should NOT happen
@@ -188,14 +186,14 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
                 send(manager, WARM_UP_TIME, DistributedSimTags.START_ALGORITHM_EVENT);
             }
         } else if (simEvent.getTag() == DistributedSimTags.TASK_OFFLOAD_EVENT) {
-            manager.removeEdgeDevice(this);
+            manager.removeApplication(this);
             handleTaskOffloadEvent(simEvent);
             manager.addToCompletedList(this);
         }
     }
 
     /**
-     * Used by other EdgeDeviceAbstract instances to send messages to the current instance.
+     * Used by other DistributedApplication instances to send messages to the current instance.
      * Usage only in broadcast function.
      *
      * @param message Message to be sent.
@@ -235,7 +233,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      */
     protected void broadcast(MessageInterface message) {
         totalMessagesSent++;
-        for (EdgeDeviceAbstract n: this.neighbours) {
+        for (DistributedApplication n: this.neighbours) {
             n.addToQueue(message.clone());
         }
     }
@@ -246,7 +244,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * @param virtualMachine the virtual machine being created
      * @return true if there is enough resources in the server to spin up the virtual machine
      */
-    protected boolean checkIfOffloadPossible(EdgeServer server, Vm virtualMachine) {
+    protected boolean checkIfOffloadPossible(Server server, Vm virtualMachine) {
         ResourceBundle availableResources = server.getAvailableResources();
         ResourceBundle resourceDemanded = new ResourceBundle(virtualMachine);
 
@@ -254,7 +252,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     }
 
     /**
-     * Attempts to create a {@link Vm virtual machine} on the {@link EdgeServer server}.
+     * Attempts to create a {@link Vm virtual machine} on the {@link Server server}.
      * If successful, task will be offloaded to the virtual machine.
      *
      * @param server the server to offload to
@@ -262,7 +260,7 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
      * @param task the task to offload
      * @return true if the task was offloaded
      */
-    protected boolean offload(EdgeServer server, Vm virtualMachine, Cloudlet task) {
+    protected boolean offload(Server server, Vm virtualMachine, Cloudlet task) {
         if (!checkIfOffloadPossible(server, virtualMachine)) { return false; }
         broker.setDatacenterMapper((dc, u) -> server);
         virtualMachine.setId(VM_ID++);
@@ -331,10 +329,10 @@ public abstract class EdgeDeviceAbstract extends CloudSimEntity {
     public abstract void printResults();
 
     /**
-     * For each {@link EdgeServer edge server}, get the resource consumption by this edge device.
+     * For each {@link Server edge server}, get the resource consumption by this edge device.
      * @return the resource consumption
      */
-    public abstract HashMap<EdgeServer, ResourceBundle> getFinalResourcesConsumption();
+    public abstract HashMap<Server, ResourceBundle> getFinalResourcesConsumption();
 
     /**
      * Resets the relevant variables for a distributed simulation to start anew.

@@ -1,11 +1,9 @@
 package fazirul.fyp.dragon.dragonDevice;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import fazirul.fyp.dragon.utils.EdgeDeviceInformation;
 import fazirul.fyp.dragon.utils.Election;
 import fazirul.fyp.dragon.utils.Message;
-import fazirul.fyp.elements.EdgeServer;
+import fazirul.fyp.elements.Server;
 import fazirul.fyp.elements.ResourceBundle;
 
 import java.time.LocalTime;
@@ -21,7 +19,7 @@ public class GlobalData {
      *
      * @see EdgeDeviceDragon#getIndex()
      */
-    private final HashMap<EdgeServer, List<EdgeDeviceInformation>> data = new HashMap<>();
+    private final HashMap<Server, List<EdgeDeviceInformation>> data = new HashMap<>();
 
     /**
      * The edge device that this GlobalData belongs to.
@@ -32,7 +30,7 @@ public class GlobalData {
     /**
      * The winners of the most recently computed election.
      */
-    private final HashMap<EdgeServer, HashSet<Integer>> electionWinners = new HashMap<>();
+    private final HashMap<Server, HashSet<Integer>> electionWinners = new HashMap<>();
 
     /**
      * @param edgeDevice the edge device that is maintaining such information
@@ -40,8 +38,8 @@ public class GlobalData {
      */
     public GlobalData(EdgeDeviceDragon edgeDevice, int sizeOfNetwork) {
         this.edgeDevice = edgeDevice;
-        HashSet<EdgeServer> edgeServers = edgeDevice.getEdgeServers();
-        for (EdgeServer e: edgeServers) {
+        HashSet<Server> servers = edgeDevice.getEdgeServers();
+        for (Server e: servers) {
             List<EdgeDeviceInformation> deviceInformations = new ArrayList<>();
             for (int i = 0; i < sizeOfNetwork; i++) {
                 deviceInformations.add(new EdgeDeviceInformation(i));
@@ -56,9 +54,9 @@ public class GlobalData {
      * Performs the multi-node election routine as specified in the DRAGON paper.
      * @return Election results in each edge server
      */
-    protected HashMap<EdgeServer, Election> election() {
-        HashMap<EdgeServer, Election> results = election(new HashSet<>());
-        for (EdgeServer e: results.keySet()) {
+    protected HashMap<Server, Election> election() {
+        HashMap<Server, Election> results = election(new HashSet<>());
+        for (Server e: results.keySet()) {
             electionWinners.put(e, new HashSet<>(results.get(e).getWinners())); //update the winners
         }
 
@@ -72,11 +70,11 @@ public class GlobalData {
      * @param blacklistedDevices the devices that we don't take into consideration to resolve election-conflicts.
      * @return Election results in each edge server
      */
-    private HashMap<EdgeServer, Election> election(HashSet<Integer> blacklistedDevices) {
-        HashMap<EdgeServer, Election> electionResults = new HashMap<>();
+    private HashMap<Server, Election> election(HashSet<Integer> blacklistedDevices) {
+        HashMap<Server, Election> electionResults = new HashMap<>();
 
         //perform election for all servers
-        for (EdgeServer e: edgeDevice.getEdgeServers()) {
+        for (Server e: edgeDevice.getEdgeServers()) {
             electionResults.put(e, singleServerElection(e, blacklistedDevices));
         }
 
@@ -84,10 +82,10 @@ public class GlobalData {
         //base case: when there are no more false winners
         if (nextFalseWinner == -1) {
             //release all the votes held by the losers
-            for (EdgeServer edgeServer: electionResults.keySet()) {
-                HashSet<Integer> losers = electionResults.get(edgeServer).getLosers();
+            for (Server server : electionResults.keySet()) {
+                HashSet<Integer> losers = electionResults.get(server).getLosers();
                 for (int loser: losers) {
-                    EdgeDeviceInformation loserInfo = data.get(edgeServer).get(loser);
+                    EdgeDeviceInformation loserInfo = data.get(server).get(loser);
                     loserInfo.setVote(0);
                     loserInfo.setResource(new ResourceBundle(0,0,0));
                     loserInfo.setTimestamp(LocalTime.now());
@@ -106,7 +104,7 @@ public class GlobalData {
      * @param blacklistedDevices A set of edge devices that will not be considered during election.
      * @return The results of the {@link Election}
      */
-    private Election singleServerElection(EdgeServer e, HashSet<Integer> blacklistedDevices) {
+    private Election singleServerElection(Server e, HashSet<Integer> blacklistedDevices) {
         Election electionResult = new Election();
         electionResult.addToResidualResources(e.getAvailableResources()); //eventually, the residual resources will decrease as we add winners
 
@@ -149,7 +147,7 @@ public class GlobalData {
      * @param electionResults the election results
      * @return the index of the false winner
      */
-    private int computeNextFalseWinner(HashMap<EdgeServer, Election> electionResults) {
+    private int computeNextFalseWinner(HashMap<Server, Election> electionResults) {
         HashSet<Integer> overallWinners = new HashSet<>();
         HashSet<Integer> overallLosers = new HashSet<>();
 
@@ -182,11 +180,11 @@ public class GlobalData {
         }
 
         for (FalseWinner falseWinner: falseWinnerList) {
-            for (EdgeServer edgeServer: electionResults.keySet()) {
-                if (electionResults.get(edgeServer).getLosers().contains(falseWinner.id)) { falseWinner.numberOfElectionsLost++; }
+            for (Server server : electionResults.keySet()) {
+                if (electionResults.get(server).getLosers().contains(falseWinner.id)) { falseWinner.numberOfElectionsLost++; }
 
-                if (data.get(edgeServer).get(falseWinner.id).getVote() == 0) { continue; } //if it didn't vote on this server, don't have to update minVoteResourceRatio
-                falseWinner.minVoteResourceRatio = Math.min(data.get(edgeServer).get(falseWinner.id).getVoteResourceRatio(edgeServer.getAvailableResources()),
+                if (data.get(server).get(falseWinner.id).getVote() == 0) { continue; } //if it didn't vote on this server, don't have to update minVoteResourceRatio
+                falseWinner.minVoteResourceRatio = Math.min(data.get(server).get(falseWinner.id).getVoteResourceRatio(server.getAvailableResources()),
                         falseWinner.minVoteResourceRatio);
             }
         }
@@ -201,11 +199,11 @@ public class GlobalData {
     /**
      * Returns the {@link EdgeDeviceInformation} for the server specified.
      * @param edgeDeviceIndex the index of the edge device
-     * @param edgeServer the specified edge server
+     * @param server the specified edge server
      * @return the edge device information
      */
-    protected EdgeDeviceInformation getEdgeDeviceInformationForServer(int edgeDeviceIndex, EdgeServer edgeServer) {
-        return data.get(edgeServer).get(edgeDeviceIndex);
+    protected EdgeDeviceInformation getEdgeDeviceInformationForServer(int edgeDeviceIndex, Server server) {
+        return data.get(server).get(edgeDeviceIndex);
     }
 
     /**
@@ -216,7 +214,7 @@ public class GlobalData {
      * </p>
      * @return each server mapped to the set of edge devices that won election on the server
      */
-    private HashMap<EdgeServer, HashSet<Integer>> getWinners() {
+    private HashMap<Server, HashSet<Integer>> getWinners() {
         return electionWinners;
     }
 
@@ -226,13 +224,13 @@ public class GlobalData {
      */
     protected boolean agreement(Message incomingMessage) {
         GlobalData otherData = incomingMessage.getData();
-        HashMap<EdgeServer, HashSet<Integer>> otherDataWinners = otherData.getWinners();
-        HashMap<EdgeServer, HashSet<Integer>> currentDataWinners = getWinners();
+        HashMap<Server, HashSet<Integer>> otherDataWinners = otherData.getWinners();
+        HashMap<Server, HashSet<Integer>> currentDataWinners = getWinners();
 
         //for each edge server, we compare the winners between the two global data
-        for (EdgeServer edgeServer: otherDataWinners.keySet()) {
-            HashSet<Integer> other = otherDataWinners.get(edgeServer);
-            HashSet<Integer> curr = currentDataWinners.get(edgeServer);
+        for (Server server : otherDataWinners.keySet()) {
+            HashSet<Integer> other = otherDataWinners.get(server);
+            HashSet<Integer> curr = currentDataWinners.get(server);
 
             //if the winners are not the same, consensus is not reached. Update the latest information received
             if (!other.equals(curr)) {
@@ -247,14 +245,14 @@ public class GlobalData {
      * @param other the other {@link GlobalData} object
      */
     protected void update(GlobalData other) {
-        for (EdgeServer edgeServer: data.keySet()) {
-            for (int i = 0; i < data.get(edgeServer).size(); i++) {
-                EdgeDeviceInformation currInfo = getEdgeDeviceInformationForServer(i, edgeServer);
-                EdgeDeviceInformation otherInfo = other.getEdgeDeviceInformationForServer(i, edgeServer);
+        for (Server server : data.keySet()) {
+            for (int i = 0; i < data.get(server).size(); i++) {
+                EdgeDeviceInformation currInfo = getEdgeDeviceInformationForServer(i, server);
+                EdgeDeviceInformation otherInfo = other.getEdgeDeviceInformationForServer(i, server);
 
                 //curr info is outdated
                 if (currInfo.getTimestamp().isBefore(otherInfo.getTimestamp())) {
-                    data.get(edgeServer).set(i, otherInfo);
+                    data.get(server).set(i, otherInfo);
                 }
             }
         }
@@ -265,7 +263,7 @@ public class GlobalData {
      * @param vote the new vote
      * @param e the edge server
      */
-    protected void updateVoteForServer(int vote, EdgeServer e) {
+    protected void updateVoteForServer(int vote, Server e) {
         EdgeDeviceInformation ownInfo = data.get(e).get(edgeDevice.getIndex());
         ownInfo.setVote(vote);
         ownInfo.setTimestamp(LocalTime.now());
@@ -276,7 +274,7 @@ public class GlobalData {
      * @param resource the resource demanded
      * @param e the edge server
      */
-    protected void updateResourceForServer(ResourceBundle resource, EdgeServer e) {
+    protected void updateResourceForServer(ResourceBundle resource, Server e) {
         EdgeDeviceInformation ownInfo = data.get(e).get(edgeDevice.getIndex());
         ownInfo.setResource(resource);
     }

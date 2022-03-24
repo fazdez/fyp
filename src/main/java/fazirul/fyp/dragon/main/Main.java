@@ -9,6 +9,7 @@ public class Main {
     public static void main(String[] args) {
         CloudSim simulation = new CloudSim();
         DistSimManager distSimManager = new DistSimManager(simulation);
+        distSimManager.setDenseTopology();
 
         //initialize SINGLETON classes
         Config cfg = Config.getInstance();

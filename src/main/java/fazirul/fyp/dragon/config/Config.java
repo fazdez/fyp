@@ -2,7 +2,7 @@ package fazirul.fyp.dragon.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
-import fazirul.fyp.elements.EdgeServer;
+import fazirul.fyp.elements.Server;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.core.CloudSim;
 
@@ -54,10 +54,10 @@ public class Config {
         return result;
     }
 
-    public HashSet<EdgeServer> createEdgeServers(CloudSim sim) {
-        HashSet<EdgeServer> result = new HashSet<>();
+    public HashSet<Server> createEdgeServers(CloudSim sim) {
+        HashSet<Server> result = new HashSet<>();
         for (ResourceBundlePOJO n: configurations.getEdgeServers()) {
-            result.add(new EdgeServer(sim, new ResourceBundle(n.getCpu(), n.getBandwidth(), n.getMemory())));
+            result.add(new Server(sim, new ResourceBundle(n.getCpu(), n.getBandwidth(), n.getMemory())));
         }
 
         return result;

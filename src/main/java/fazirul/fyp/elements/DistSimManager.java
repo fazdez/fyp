@@ -1,7 +1,6 @@
 package fazirul.fyp.elements;
 
 import org.cloudbus.cloudsim.core.CloudSimEntity;
-import org.cloudbus.cloudsim.core.CloudSimTag;
 import org.cloudbus.cloudsim.core.Simulation;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 import org.slf4j.Logger;
@@ -18,7 +17,7 @@ public class DistSimManager extends CloudSimEntity {
      * To run the distributed algorithm, the DistSimManager has to keep track of the current devices
      * participating in the algorithm. It is maintained in this list.
      */
-    private final List<EdgeDeviceAbstract> edgeDeviceList = new ArrayList<>();
+    private final List<DistributedApplication> participatingApplications = new ArrayList<>();
 
     /**
      * Each device that has ended will be moved to this list.
@@ -26,7 +25,7 @@ public class DistSimManager extends CloudSimEntity {
      *
      * <p>This is useful to print some statistics after the whole simulation run.</p>
      */
-    private final List<EdgeDeviceAbstract> completedList = new ArrayList<>();
+    private final List<DistributedApplication> completedList = new ArrayList<>();
 
     /**
      * Each device that has failed will be moved to this list.
@@ -34,7 +33,7 @@ public class DistSimManager extends CloudSimEntity {
      *
      * <p>This is useful to print some statistics after the whole simulation run.</p>
      */
-    private final List<EdgeDeviceAbstract> failedList = new ArrayList<>();
+    private final List<DistributedApplication> failedList = new ArrayList<>();
 
     public DistSimManager(Simulation simulation) {
         super(simulation);
@@ -48,76 +47,76 @@ public class DistSimManager extends CloudSimEntity {
     @Override
     public void processEvent(SimEvent simEvent) {
         if (simEvent.getTag() == DistributedSimTags.START_ALGORITHM_EVENT) {
-            if (!(simEvent.getSource() instanceof EdgeDeviceAbstract)) {
+            if (!(simEvent.getSource() instanceof DistributedApplication)) {
                 LOGGER.warn("{}: {}: received event from unexpected entity.", getSimulation().clockStr(), this);
                 return;
             }
-            resetEdgeDevices();
+            resetApplications();
             runSimulation();
-            offloadEligibleEdgeDevices();
+            offloadEligibleApplications();
         } else {
             shutdown();
         }
     }
 
     /**
-     * If edge device is successful in the distributed simulation (i.e. runtime != -1),
-     * create a new offload event to be handled by the edge device. If device is unsuccessful, move
+     * If application is successful in the distributed simulation (i.e. runtime != -1),
+     * create a new offload event to be handled by the application. If device is unsuccessful, move
      * device to failedDevices list.
      */
-    private void offloadEligibleEdgeDevices() {
+    private void offloadEligibleApplications() {
         int idx = 0;
-        while (idx < edgeDeviceList.size()) {
-            EdgeDeviceAbstract ed = edgeDeviceList.get(idx);
-            if (ed.getRuntime() != -1) {
-                double offloadTime = getSimulation().clock() + ed.getRuntime();
+        while (idx < participatingApplications.size()) {
+            DistributedApplication app = participatingApplications.get(idx);
+            if (app.getRuntime() != -1) {
+                double offloadTime = getSimulation().clock() + app.getRuntime();
 
                 /*
                 Check future events earlier than offloadTime for the following
                 1) StartAlgorithmEvent
                 2) ArrivalEvent, a, if a.getTime() + WARM_UP_TIME < offloadTime
 
-                If no such events exist in the future event list, schedule OffloadEvent at offloadTime to the edge device.
+                If no such events exist in the future event list, schedule OffloadEvent at offloadTime to the application.
                  */
 
                 long numInvalidationEvents = getSimulation().getNumberOfFutureEvents(evt -> {
                    if (evt.getTime() <= offloadTime) {
-                       if (evt.getTag() == DistributedSimTags.START_ALGORITHM_EVENT && evt.getSource() instanceof EdgeDeviceAbstract) {
+                       if (evt.getTag() == DistributedSimTags.START_ALGORITHM_EVENT && evt.getSource() instanceof DistributedApplication) {
                            return true;
                        }
 
-                       return evt.getTag() == DistributedSimTags.ARRIVAL_EVENT && evt.getSource() instanceof EdgeDeviceAbstract &&
-                               evt.getTime() + EdgeDeviceAbstract.WARM_UP_TIME <= offloadTime;
+                       return evt.getTag() == DistributedSimTags.ARRIVAL_EVENT && evt.getSource() instanceof DistributedApplication &&
+                               evt.getTime() + DistributedApplication.WARM_UP_TIME <= offloadTime;
                    }
                    return false;
                 });
 
                 if (numInvalidationEvents == 0) {
 //                    LOGGER.info("{}: {}: {} successful in distributed simulation. Runtime = {}",
-//                            getSimulation().clockStr(), getName(), ed.getName(), ed.getRuntime());
-                    send(ed, ed.getRuntime(), DistributedSimTags.TASK_OFFLOAD_EVENT);
+//                            getSimulation().clockStr(), getName(), app.getName(), app.getRuntime());
+                    send(app, app.getRuntime(), DistributedSimTags.TASK_OFFLOAD_EVENT);
                 }
                 idx++;
             } else {
-                removeEdgeDevice(ed);
-                ed.shutdown();
-                failedList.add(ed);
+                removeApplication(app);
+                app.shutdown();
+                failedList.add(app);
             }
         }
     }
 
     /**
-     * Based on the {@link #edgeDeviceList participating edge devices}, run the distributed algorithm for each device.
+     * Based on the {@link #participatingApplications}, run the distributed algorithm for each device.
      * <p>Functions are run using multi-threading.</p>
      *
-     * @see EdgeDeviceAbstract#startDistributedAlgorithm()
+     * @see DistributedApplication#startDistributedAlgorithm()
      */
     private void runSimulation() {
         LOGGER.info("{}: {} starting Distributed Simulation with {} participating devices...",
-                getSimulation().clockStr(), getName(), getNumParticipatingEntities());
+                getSimulation().clockStr(), getName(), getNumParticipatingApplications());
         List<Thread> threads = new ArrayList<>();
-        for (EdgeDeviceAbstract ed : edgeDeviceList) {
-            threads.add(new Thread(ed::startDistributedAlgorithm));
+        for (DistributedApplication app : participatingApplications) {
+            threads.add(new Thread(app::startDistributedAlgorithm));
         }
 
         for (Thread t: threads) {
@@ -132,48 +131,48 @@ public class DistSimManager extends CloudSimEntity {
             }
         }
 
-        for (EdgeDeviceAbstract ed: edgeDeviceList) {
-            ed.printResults();
+        for (DistributedApplication app : participatingApplications) {
+            app.printResults();
         }
     }
 
     /**
-     * For each edge device, reset its internal variables related to distributed algorithm.
+     * For each application, reset its internal variables related to distributed algorithm.
      * Then create the topology based on the current device list.
-     * @see EdgeDeviceAbstract#reset()
+     * @see DistributedApplication#reset()
      */
-    private void resetEdgeDevices() {
-        for (int idx = 0; idx < edgeDeviceList.size(); idx++) {
-            EdgeDeviceAbstract edgeDevice = edgeDeviceList.get(idx);
-            edgeDevice.reset();
-            edgeDevice.setIndex(idx);
+    private void resetApplications() {
+        for (int idx = 0; idx < participatingApplications.size(); idx++) {
+            DistributedApplication app = participatingApplications.get(idx);
+            app.reset();
+            app.setIndex(idx);
         }
 
         createTopology();
     }
 
     /**
-     * @param edgeDevice device to be added
-     * @see #edgeDeviceList
+     * @param Application device to be added
+     * @see #participatingApplications
      */
-    public void addEdgeDevice(EdgeDeviceAbstract edgeDevice) {
-        edgeDeviceList.add(edgeDevice);
+    public void addApplication(DistributedApplication Application) {
+        participatingApplications.add(Application);
     }
 
     /**
-     * @param edgeDevice device to be removed
-     * @see #edgeDeviceList
+     * @param Application device to be removed
+     * @see #participatingApplications
      */
-    public void removeEdgeDevice(EdgeDeviceAbstract edgeDevice) {
-        edgeDeviceList.remove(edgeDevice);
+    public void removeApplication(DistributedApplication Application) {
+        participatingApplications.remove(Application);
     }
 
     /**
-     * @param edgeDevice device that has completed and not participating in future events
+     * @param Application device that has completed and not participating in future events
      * @see #completedList
      */
-    public void addToCompletedList(EdgeDeviceAbstract edgeDevice) {
-        completedList.add(edgeDevice);
+    public void addToCompletedList(DistributedApplication Application) {
+        completedList.add(Application);
     }
 
     /**
@@ -192,27 +191,27 @@ public class DistSimManager extends CloudSimEntity {
 
     /**
      * Based on the topology (sparse vs dense), add the appropriate neighbours for each device.
-     * Usage can be found in {@link #resetEdgeDevices()} only.
+     * Usage can be found in {@link #resetApplications()} only.
      *
      * <p>For sparse topology, each device will have at most 2 neighbours (left and/or right in the list).</p>
      * <p>For dense topology, each device will be connected to every other device.</p>
      */
     private void createTopology() {
-        for (int idx = 0; idx < edgeDeviceList.size(); idx++) {
-            EdgeDeviceAbstract edgeDevice = edgeDeviceList.get(idx);
+        for (int idx = 0; idx < participatingApplications.size(); idx++) {
+            DistributedApplication app = participatingApplications.get(idx);
             if (topology == 0) { // SPARSE TOPOLOGY
                 if (idx > 0) {
-                    edgeDevice.addNeighbour(edgeDeviceList.get(idx - 1));
+                    app.addNeighbour(participatingApplications.get(idx - 1));
                 }
-                if (idx < edgeDeviceList.size() - 1) {
-                    edgeDevice.addNeighbour(edgeDeviceList.get(idx + 1));
+                if (idx < participatingApplications.size() - 1) {
+                    app.addNeighbour(participatingApplications.get(idx + 1));
                 }
             } else { // DENSE TOPOLOGY
                 int copy = idx; //not allowed to have reassigned variable in lambda function, thus make a copy
-                edgeDeviceList.forEach(e -> {
+                participatingApplications.forEach(e -> {
                     // if it's not the current index (itself), add as neighbour
                     if (e.getIndex() != copy) {
-                        edgeDevice.addNeighbour(e);
+                        app.addNeighbour(e);
                     }
                 });
             }
@@ -220,9 +219,9 @@ public class DistSimManager extends CloudSimEntity {
     }
 
     /**
-     * @return the total number of edge devices participating in distributed simulation.
+     * @return the total number of applications participating in distributed simulation.
      */
-    public int getNumParticipatingEntities() {
-        return edgeDeviceList.size();
+    public int getNumParticipatingApplications() {
+        return participatingApplications.size();
     }
 }

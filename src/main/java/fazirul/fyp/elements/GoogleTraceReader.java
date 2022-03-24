@@ -20,24 +20,24 @@ import java.util.function.Function;
  * However, it contains useful parsing of the Google Trace Data, thus this class overrides only certain functionalities of the built-in reader.
  */
 public class GoogleTraceReader extends GoogleTaskEventsTraceReader  {
-    private final HashMap<String, EdgeDeviceAbstract> edgeDevices = new HashMap<>();
+    private final HashMap<String, DistributedApplication> edgeDevices = new HashMap<>();
     private final HashMap<String, Integer> jobIDToTaskIndexMapping = new HashMap<>();
-    private final HashMap<String, EdgeDeviceAbstract> jobIDToEdgeDeviceMapping = new HashMap<>();
+    private final HashMap<String, DistributedApplication> jobIDToEdgeDeviceMapping = new HashMap<>();
     private final HashMap<Double, Integer> arrivalEventCount = new HashMap<>();
 
     private static final int MAX_EVENTS = 50;
-    private final Function<TaskEvent, EdgeDeviceAbstract> edgeDeviceCreateFunction;
+    private final Function<TaskEvent, DistributedApplication> edgeDeviceCreateFunction;
     private final ResourceBundle resourceAvailableOnSingleServer;
 
-    public GoogleTraceReader(CloudSim simulation, String filePath, Function<TaskEvent, Cloudlet> cloudletCreationFunction, Function<TaskEvent, EdgeDeviceAbstract> edgeDeviceCreateFunction) throws IOException {
+    public GoogleTraceReader(CloudSim simulation, String filePath, Function<TaskEvent, Cloudlet> cloudletCreationFunction, Function<TaskEvent, DistributedApplication> edgeDeviceCreateFunction) throws IOException {
         super(simulation, filePath, ResourceLoader.newInputStream(filePath, GoogleTraceReader.class), cloudletCreationFunction);
         this.edgeDeviceCreateFunction = edgeDeviceCreateFunction;
         resourceAvailableOnSingleServer = new ResourceBundle(0,0,0);
-        Optional<SimEntity> optionalSimEntity = getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof EdgeServer).findAny();
+        Optional<SimEntity> optionalSimEntity = getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof Server).findAny();
         if (optionalSimEntity.isEmpty()) {
             System.out.println("No edge servers registered with simulation!");
         } else {
-            resourceAvailableOnSingleServer.addResources(((EdgeServer)optionalSimEntity.get()).getTotalResources());
+            resourceAvailableOnSingleServer.addResources(((Server)optionalSimEntity.get()).getTotalResources());
         }
     }
 
@@ -71,14 +71,14 @@ public class GoogleTraceReader extends GoogleTaskEventsTraceReader  {
 
         String edgeDeviceUserName = createEdgeDeviceUsername(event);
         String taskIdentifier = event.getUserName() + "_" + event.getJobId();
-        EdgeDeviceAbstract edgeDevice;
+        DistributedApplication edgeDevice;
         if (event.getType() == TaskEventType.FINISH) {
             if (jobIDToTaskIndexMapping.get(taskIdentifier) == null || jobIDToEdgeDeviceMapping.get(taskIdentifier) == null) {
                 return true;
             }
             edgeDevice = jobIDToEdgeDeviceMapping.get(taskIdentifier);
             if (!(edgeDevice instanceof EdgeDeviceDragon)) {
-                return true; //TODO: do for all EdgeDeviceAbstract types?
+                return true; //TODO: do for all DistributedApplication types?
             }
             int taskIndex = jobIDToTaskIndexMapping.get(taskIdentifier);
             double duration = event.getTimestamp() - edgeDevice.getArrivalTime();

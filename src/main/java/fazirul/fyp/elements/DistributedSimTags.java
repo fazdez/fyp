@@ -4,7 +4,7 @@ import org.cloudbus.cloudsim.core.CloudSimTag;
 
 /**
  * As CloudSimTag enums are not extensible, we have to map our own enums to the available enums.
- * <p>Only for use between {@link DistSimManager} and {@link EdgeDeviceAbstract}.</p>
+ * <p>Only for use between {@link DistSimManager} and {@link DistributedApplication}.</p>
  */
 public class DistributedSimTags {
     public static final CloudSimTag ARRIVAL_EVENT = CloudSimTag.CLOUDLET_SUBMIT;

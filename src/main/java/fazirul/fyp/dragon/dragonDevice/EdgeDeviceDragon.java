@@ -16,12 +16,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class EdgeDeviceDragon extends EdgeDeviceAbstract {
+public class EdgeDeviceDragon extends DistributedApplication {
     private static final long CLOUDLET_LENGTH = 1;
     private final long TIME_TO_WAIT = 500;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
-    protected final HashMap<EdgeServer, Double> maxBidRatio = new HashMap<>();
+    protected final HashMap<Server, Double> maxBidRatio = new HashMap<>();
     private final HashMap<Integer, Double> taskLength = new HashMap<>();
 
 
@@ -30,7 +30,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     public EdgeDeviceDragon(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
         super(simulation, username, arrivalTime, tasks);
         assignments = new AssignmentVector(this);
-        globalData = new GlobalData(this, getDistSimManager().getNumParticipatingEntities());
+        globalData = new GlobalData(this, getDistSimManager().getNumParticipatingApplications());
         getEdgeServers().forEach(e -> maxBidRatio.put(e, Double.MAX_VALUE));
     }
 
@@ -133,7 +133,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
             globalData.update(message.getData());
         }
 
-        HashMap<EdgeServer, Election> electionResults = globalData.election();
+        HashMap<Server, Election> electionResults = globalData.election();
         while(outvoted(electionResults)) {
             updateMaxBidRatio(electionResults);
             if (!assignments.embedding(getResidualResourcesFromElection(electionResults))) {
@@ -176,17 +176,17 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
     @Override
     public void printResults() {
         LOGGER.info("Device (index = {}): total run time = {}, is_winner = {}", getIndex(), getRuntime(), !failed);
-        HashMap<EdgeServer, ResourceBundle> resourceConsumption = getFinalResourcesConsumption();
-        for (EdgeServer e: resourceConsumption.keySet()) {
+        HashMap<Server, ResourceBundle> resourceConsumption = getFinalResourcesConsumption();
+        for (Server e: resourceConsumption.keySet()) {
             ResourceBundle consumption = resourceConsumption.get(e);
             LOGGER.info("{}: {} on {}", getName(), consumption, e.getName());
         }
     }
 
     @Override
-    public HashMap<EdgeServer, ResourceBundle> getFinalResourcesConsumption() {
-        HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();
-        for (EdgeServer e: getEdgeServers()) {
+    public HashMap<Server, ResourceBundle> getFinalResourcesConsumption() {
+        HashMap<Server, ResourceBundle> result = new HashMap<>();
+        for (Server e: getEdgeServers()) {
             result.put(e, new ResourceBundle(0,0,0));
         }
 
@@ -207,7 +207,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
         incomingMessages.flush(); //could be from previous distributed simulation run, thus clear all
         failed = false;
         assignments.clear();
-        globalData = new GlobalData(this, getDistSimManager().getNumParticipatingEntities());
+        globalData = new GlobalData(this, getDistSimManager().getNumParticipatingApplications());
         getEdgeServers().forEach(e -> maxBidRatio.put(e, Double.MAX_VALUE));
     }
 
@@ -215,11 +215,11 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      * For each edge server found in the simulation, get the resource available.
      * @return each edge server mapped to their available resource
      *
-     * @see EdgeServer#getAvailableResources()
+     * @see Server#getAvailableResources()
      */
-    protected HashMap<EdgeServer, ResourceBundle> getResourceAvailableInServers() {
-        HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();
-        for (EdgeServer e: getEdgeServers()) {
+    protected HashMap<Server, ResourceBundle> getResourceAvailableInServers() {
+        HashMap<Server, ResourceBundle> result = new HashMap<>();
+        for (Server e: getEdgeServers()) {
             result.put(e, e.getAvailableResources());
         }
         return result;
@@ -232,7 +232,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      * <p>See "score" function in the DRAGON paper to see how vote is calculated.</p>
      */
     private void voting() {
-        for (EdgeServer e: getEdgeServers()) {
+        for (Server e: getEdgeServers()) {
             int totalPrivateUtility = 0;
             ResourceBundle totalResourceDemanded = new ResourceBundle(0, 0, 0);
 
@@ -263,7 +263,7 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      * @param electionResults each edge server mapped to their election result
      * @return true if this edge device did not win in any election
      */
-    private boolean outvoted(HashMap<EdgeServer, Election> electionResults) {
+    private boolean outvoted(HashMap<Server, Election> electionResults) {
         for (Election result: electionResults.values()) {
             if (result.getWinners().contains(getIndex())) { return false; }
         }
@@ -282,9 +282,9 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      * @param electionResults each server mapped to their election result
      * @return each server mapped to their election result's residual resources
      */
-    private HashMap<EdgeServer, ResourceBundle> getResidualResourcesFromElection(HashMap<EdgeServer, Election> electionResults) {
-        HashMap<EdgeServer, ResourceBundle> result = new HashMap<>();
-        for (EdgeServer e: electionResults.keySet()) {
+    private HashMap<Server, ResourceBundle> getResidualResourcesFromElection(HashMap<Server, Election> electionResults) {
+        HashMap<Server, ResourceBundle> result = new HashMap<>();
+        for (Server e: electionResults.keySet()) {
             result.put(e, electionResults.get(e).getResidualResources());
         }
 
@@ -296,17 +296,17 @@ public class EdgeDeviceDragon extends EdgeDeviceAbstract {
      *
      * We have to update it everytime we run an election so that we do not give a higher vote than before.
      * <p>See "score" function in the DRAGON paper.</p>*/
-    private void updateMaxBidRatio(HashMap<EdgeServer, Election> electionResults) {
-        for (EdgeServer edgeServer: getEdgeServers()) {
+    private void updateMaxBidRatio(HashMap<Server, Election> electionResults) {
+        for (Server server : getEdgeServers()) {
             double smallestRatio = Double.MAX_VALUE;
-            Election electionResult = electionResults.get(edgeServer);
+            Election electionResult = electionResults.get(server);
             for (int winner: electionResult.getWinners()) {
-                double candidateSmallestRatio = globalData.getEdgeDeviceInformationForServer(winner, edgeServer).getVoteResourceRatio(edgeServer.getAvailableResources());
+                double candidateSmallestRatio = globalData.getEdgeDeviceInformationForServer(winner, server).getVoteResourceRatio(server.getAvailableResources());
                 smallestRatio = Math.min(smallestRatio, candidateSmallestRatio);
             }
 
             if (smallestRatio < Double.MAX_VALUE) {
-                maxBidRatio.put(edgeServer, smallestRatio);
+                maxBidRatio.put(server, smallestRatio);
             }
         }
     }

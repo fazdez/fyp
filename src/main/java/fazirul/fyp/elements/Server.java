@@ -11,14 +11,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class EdgeServer extends DatacenterSimple {
-    private static final String DEFAULT_NAME = "EdgeServer_";
+public class Server extends DatacenterSimple {
+    private static final String DEFAULT_NAME = "Server_";
     private static int globalID = 0;
     private final static int DEFAULT_STORAGE_CAPACITY = Integer.MAX_VALUE;
     private final static int HOST_DEFAULT_MIPS = 1000;
     private final ResourceBundle totalResources;
 
-    public EdgeServer(CloudSim simulation, ResourceBundle resources) {
+    public Server(CloudSim simulation, ResourceBundle resources) {
         super(simulation, Collections.singletonList(createHostFromResourceBundle(resources)));
         setName(DEFAULT_NAME + globalID);
         globalID++;
