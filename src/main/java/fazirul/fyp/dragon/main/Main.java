@@ -7,9 +7,9 @@ import org.cloudbus.cloudsim.core.CloudSim;
 
 public class Main {
     public static void main(String[] args) {
-        CloudSim simulation = new CloudSim();
+        CloudSim simulation = new CloudSim(1);
         DistSimManager distSimManager = new DistSimManager(simulation);
-        distSimManager.setDenseTopology();
+        distSimManager.setSparseTopology();
 
         //initialize SINGLETON classes
         Config cfg = Config.getInstance();
@@ -20,5 +20,6 @@ public class Main {
         cfg.createEdgeDevices(simulation);
 
         simulation.start();
+        distSimManager.printStatistics();
     }
 }

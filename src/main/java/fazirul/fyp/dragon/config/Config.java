@@ -65,9 +65,9 @@ public class Config {
 
     public List<EdgeDeviceDragon> createEdgeDevices(CloudSim sim) {
         List<EdgeDeviceDragon> result = new ArrayList<>();
-        int[] arrivalTimes = configurations.getArrivalTimes();
+        float[] arrivalTimes = configurations.getArrivalTimes();
         for(int idx = 0; idx < configurations.getEdgeDevices().length; idx++) {
-            int arrivalTime = 0; //default arrival time
+            float arrivalTime = 0; //default arrival time
             if (idx < arrivalTimes.length) {
                 //ensure bounds
                 arrivalTime = arrivalTimes[idx];

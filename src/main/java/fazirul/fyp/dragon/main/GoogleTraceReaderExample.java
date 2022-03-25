@@ -22,7 +22,7 @@ public class GoogleTraceReaderExample {
     private GoogleTraceReaderExample() {
         SIMULATION = new CloudSim(1 );
         DistSimManager distSimManager = new DistSimManager(SIMULATION);
-        distSimManager.setDenseTopology();
+        distSimManager.setSparseTopology();
         //initialize SINGLETON classes
         Config cfg = Config.getInstance();
         cfg.setConfigPath(Config.filenameGoogleTraceDataSet);
@@ -38,10 +38,13 @@ public class GoogleTraceReaderExample {
         }
 
         SIMULATION.start();
+        distSimManager.printStatistics();
     }
 
     public DistributedApplication createEdgeDevice(TaskEvent event) {
-        return new EdgeDeviceDragon(SIMULATION, GoogleTraceReader.createEdgeDeviceUsername(event), event.getTimestamp(), new ArrayList<>());
+        DistributedApplication distributedApplication = new EdgeDeviceDragon(SIMULATION, GoogleTraceReader.createEdgeDeviceUsername(event), event.getTimestamp(), new ArrayList<>());
+        distributedApplication.setNetworkLatency(0);
+        return distributedApplication;
     }
 
     // we dont use this

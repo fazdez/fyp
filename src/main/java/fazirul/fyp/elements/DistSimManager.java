@@ -7,11 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class DistSimManager extends CloudSimEntity {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudSimEntity.class.getSimpleName());
     private int topology = 0;
+    private final HashMap<Double, Double> totalTimeTaken = new HashMap<>();
+    private final HashMap<Double, Integer> numApplications = new HashMap<>();
+    private final HashMap<Double, Integer> totalMessagesExchanged = new HashMap<>();
 
     /**
      * To run the distributed algorithm, the DistSimManager has to keep track of the current devices
@@ -51,9 +55,15 @@ public class DistSimManager extends CloudSimEntity {
                 LOGGER.warn("{}: {}: received event from unexpected entity.", getSimulation().clockStr(), this);
                 return;
             }
+            participatingApplications.add((DistributedApplication) simEvent.getSource());
+
+            totalTimeTaken.put(simEvent.getTime(), 0d);
+            totalMessagesExchanged.put(simEvent.getTime(), 0);
+            numApplications.put(simEvent.getTime(), getNumParticipatingApplications());
             resetApplications();
             runSimulation();
             offloadEligibleApplications();
+            updateStatistics(simEvent.getTime());
         } else {
             shutdown();
         }
@@ -68,7 +78,7 @@ public class DistSimManager extends CloudSimEntity {
         int idx = 0;
         while (idx < participatingApplications.size()) {
             DistributedApplication app = participatingApplications.get(idx);
-            if (app.getRuntime() != -1) {
+            if (!app.hasFailed()) {
                 double offloadTime = getSimulation().clock() + app.getRuntime();
 
                 /*
@@ -223,5 +233,20 @@ public class DistSimManager extends CloudSimEntity {
      */
     public int getNumParticipatingApplications() {
         return participatingApplications.size();
+    }
+
+    public void printStatistics() {
+        for (double simulationTime : totalMessagesExchanged.keySet()) {
+            System.out.printf("time = %.2f || ", simulationTime);
+            System.out.printf("Number Applications = %d || Total Messages Exchanged = %d || Average Convergence Time = %.5f\n",
+                    numApplications.get(simulationTime), totalMessagesExchanged.get(simulationTime), totalTimeTaken.get(simulationTime) / numApplications.get(simulationTime));
+        }
+    }
+
+    private void updateStatistics(double simulationClock) {
+        for (DistributedApplication app: participatingApplications) {
+            totalTimeTaken.put(simulationClock, totalTimeTaken.get(simulationClock) + app.getRuntime());
+            totalMessagesExchanged.put(simulationClock, totalMessagesExchanged.get(simulationClock) + app.getTotalMessagesSent());
+        }
     }
 }

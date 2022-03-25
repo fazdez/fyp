@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EdgeDeviceDragon extends DistributedApplication {
     private static final long CLOUDLET_LENGTH = 1;
-    private final long TIME_TO_WAIT = 500;
+    private final long TIME_TO_WAIT = 100;
     protected final AssignmentVector assignments;
     protected GlobalData globalData;
     protected final HashMap<Server, Double> maxBidRatio = new HashMap<>();
@@ -202,10 +202,12 @@ public class EdgeDeviceDragon extends DistributedApplication {
 
     @Override
     public void reset() {
+        super.reset();
         setIndex(-1);
         neighbours.clear();
         incomingMessages.flush(); //could be from previous distributed simulation run, thus clear all
-        failed = false;
+//        failed = false;
+//        ended = false;
         assignments.clear();
         globalData = new GlobalData(this, getDistSimManager().getNumParticipatingApplications());
         getEdgeServers().forEach(e -> maxBidRatio.put(e, Double.MAX_VALUE));

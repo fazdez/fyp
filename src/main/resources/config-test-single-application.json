@@ -1,5 +1,5 @@
 {
-  "functions": [
+  "virtualMachines": [
     { "cpu":  3, "memory":  512, "bandwidth":  128 },
     { "cpu":  1, "memory":  256, "bandwidth":  256 },
     { "cpu":  1, "memory":  512, "bandwidth":  128 },
@@ -10,17 +10,17 @@
     { "cpu":  1, "memory":  256, "bandwidth":  128 },
     { "cpu":  1, "memory":  512, "bandwidth":  256 }
   ],
-  "applications": [
+  "edgeDevices": [
     [
       { "cpu":  1, "memory":  10, "bandwidth":  10 },
       { "cpu":  2, "memory":  1000, "bandwidth":  300 }
     ]
   ],
-  "nodes": [
+  "edgeServers": [
     { "cpu":  16, "memory":  4096, "bandwidth":  2048 },
     { "cpu":  12, "memory":  4096, "bandwidth":  2048 },
     { "cpu":  12, "memory":  8192, "bandwidth":  4096 },
     { "cpu":  4, "memory":  2048, "bandwidth":  1024 }
   ],
-  "topology": {}
+  "arrivalTimes": []
 }

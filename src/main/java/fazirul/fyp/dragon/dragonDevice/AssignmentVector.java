@@ -74,8 +74,8 @@ public class AssignmentVector {
         }
 
         possibleAssignments.sort(Comparator.comparingInt(TaskAssignment::getPrivateUtility).reversed());
-        if (possibleAssignments.size() >= 100) {
-            possibleAssignments = possibleAssignments.subList(0, 101);
+        if (possibleAssignments.size() >= 50) {
+            possibleAssignments = possibleAssignments.subList(0, 50);
         }
     }
 

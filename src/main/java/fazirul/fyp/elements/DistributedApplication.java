@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents an edge device in a distributed context.
@@ -27,10 +28,12 @@ import java.util.*;
  */
 public abstract class DistributedApplication extends CloudSimEntity {
     protected static final Logger LOGGER = LoggerFactory.getLogger(CloudSimEntity.class.getSimpleName());
-    private static final String DEFAULT_NAME = "EdgeDevice_";
+    private static final String DEFAULT_NAME = "Application_";
     private static final int DEFAULT_CLOUDLET_LENGTH = 100;
     public static final double WARM_UP_TIME = 0.5;
     private static int VM_ID =0;
+
+    private int networkLatencyInMilliseconds = 5;
 
     /**
      * <p>For communication to the edge server</p>
@@ -90,7 +93,7 @@ public abstract class DistributedApplication extends CloudSimEntity {
     private double runtime = -1;
 
     /**
-     * If edge device fails to win any resources after the algorithm process, set failed = true.
+     * If edge device fails to allocate any resources after the algorithm process, set failed = true.
      */
     protected boolean failed = false;
 
@@ -103,7 +106,7 @@ public abstract class DistributedApplication extends CloudSimEntity {
         super(simulation);
         setName(DEFAULT_NAME + username);
         broker = new DatacenterBrokerSimple(simulation, DEFAULT_NAME + username);
-//        broker.setVmDestructionDelay(1.01);
+        broker.setVmDestructionDelay(1.01);
         //add all edge servers found. IMPORTANT, Edge servers MUST be created BEFORE edge device created!
         getSimulation().getEntityList().stream().filter(simEntity -> simEntity instanceof Server)
                 .forEach(simEntity -> servers.add((Server) simEntity));
@@ -144,6 +147,14 @@ public abstract class DistributedApplication extends CloudSimEntity {
 
     public HashSet<Server> getEdgeServers() { return servers; }
 
+    public boolean hasFailed() { return failed; }
+
+    public int getTotalMessagesSent() { return totalMessagesSent; }
+
+    public void setNetworkLatency(int latencyInMillis) {
+        networkLatencyInMilliseconds = latencyInMillis;
+    }
+
     @Override
     protected void startInternal() {
         //send ArrivalEvent to itself at the arrival time
@@ -175,8 +186,6 @@ public abstract class DistributedApplication extends CloudSimEntity {
             long numStartAlgoEventsAtSameTime = getSimulation().getNumberOfFutureEvents(evt -> evt.getTag() == DistributedSimTags.START_ALGORITHM_EVENT
                     && evt.getSource() instanceof DistributedApplication && evt.getTime() == startAlgoTime);
 
-            getDistSimManager().addApplication(this); //register the edge device to the DistSimManager
-
             if (numStartAlgoEventsAtSameTime > 1) {
                 //this should NOT happen
                 LOGGER.warn("{}: {}: There are two or more StartAlgoEvent at the same time.",
@@ -184,7 +193,10 @@ public abstract class DistributedApplication extends CloudSimEntity {
             } else if (numStartAlgoEventsAtSameTime == 0) {
                 //if no StartAlgoEvent at the same time, proceed to send this event to the DistSimManager
                 send(manager, WARM_UP_TIME, DistributedSimTags.START_ALGORITHM_EVENT);
+            } else {
+                getDistSimManager().addApplication(this); //register the edge device to the DistSimManager
             }
+
         } else if (simEvent.getTag() == DistributedSimTags.TASK_OFFLOAD_EVENT) {
             manager.removeApplication(this);
             handleTaskOffloadEvent(simEvent);
@@ -200,7 +212,12 @@ public abstract class DistributedApplication extends CloudSimEntity {
      * @see #broadcast(MessageInterface)
      */
     private void addToQueue(MessageInterface message) {
-        new Thread(() -> incomingMessages.addMessage(message)).start();
+        new Thread(() -> {
+            try {
+                TimeUnit.MILLISECONDS.sleep(networkLatencyInMilliseconds);
+            } catch (Exception ignored) {}
+            incomingMessages.addMessage(message);
+        }).start();
     }
 
 
@@ -232,8 +249,8 @@ public abstract class DistributedApplication extends CloudSimEntity {
      * @param message Message to be sent.
      */
     protected void broadcast(MessageInterface message) {
-        totalMessagesSent++;
         for (DistributedApplication n: this.neighbours) {
+            totalMessagesSent++;
             n.addToQueue(message.clone());
         }
     }
@@ -290,8 +307,7 @@ public abstract class DistributedApplication extends CloudSimEntity {
             orchestrate();
         }
         postProcessing();
-        if (!failed) { runtime = startTime.until(LocalTime.now(), ChronoUnit.MILLIS)/1000.0; }
-        else { runtime = -1; }
+        runtime = startTime.until(LocalTime.now(), ChronoUnit.MILLIS)/1000.0d;
     }
 
     @Override
@@ -337,5 +353,9 @@ public abstract class DistributedApplication extends CloudSimEntity {
     /**
      * Resets the relevant variables for a distributed simulation to start anew.
      */
-    public abstract void reset();
+    public void reset() {
+        totalMessagesSent = 0;
+        ended = false;
+        failed = false;
+    }
 }
