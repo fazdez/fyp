@@ -15,7 +15,7 @@ import java.util.*;
  * Each VM template is uniquely identified via its index in the list.</p>
  */
 public class VirtualMachineHandler {
-    public static int VM_DEFAULT_MIPS = 100; //constant
+    public static int VM_DEFAULT_MIPS = 1; //constant
 
     /**
      * Singleton Class logic

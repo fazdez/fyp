@@ -1,0 +1,22 @@
+{
+  "virtualMachines": [
+    { "cpu":  1, "memory":  256, "bandwidth":  0 },
+    { "cpu":  1, "memory":  512, "bandwidth":  0 },
+    { "cpu":  2, "memory":  512, "bandwidth":  0 },
+    { "cpu":  2, "memory":  1024, "bandwidth":  0 },
+    { "cpu":  4, "memory":  1024, "bandwidth":  0 },
+    { "cpu":  4, "memory":  2048, "bandwidth":  0 },
+    { "cpu":  8, "memory":  2048, "bandwidth":  0 },
+    { "cpu":  8, "memory":  4096, "bandwidth":  0 },
+    { "cpu":  12, "memory":  2048, "bandwidth":  0 },
+    { "cpu":  12, "memory":  4096, "bandwidth":  0 }
+  ],
+  "edgeDevices": [],
+  "edgeServers": [
+    { "cpu":  12, "memory":  4096, "bandwidth":  2048 },
+    { "cpu":  12, "memory":  4096, "bandwidth":  2048 },
+    { "cpu":  12, "memory":  4096, "bandwidth":  2048 },
+    { "cpu":  12, "memory":  4096, "bandwidth":  2048 }
+  ],
+  "arrivalTimes": []
+}

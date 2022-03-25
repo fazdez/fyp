@@ -2,7 +2,7 @@ package fazirul.fyp.dragon.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
-import fazirul.fyp.elements.EdgeServer;
+import fazirul.fyp.elements.Server;
 import fazirul.fyp.elements.ResourceBundle;
 import org.cloudbus.cloudsim.core.CloudSim;
 
@@ -11,9 +11,10 @@ import java.util.HashSet;
 import java.util.List;
 
 public class Config {
-    private static final String filename = "/config.json";
-    private static final String testFilename = "/config-test-single-application.json";
-    private static final String filename_nofeasiblesolution = "/config-no-feasible-solution.json";
+    public static final String filename = "/config.json";
+    public static final String testFilename = "/config-test-single-application.json";
+    public static final String filename_nofeasiblesolution = "/config-no-feasible-solution.json";
+    public static final String filenameGoogleTraceDataSet = "/config-google.json";
     private static Config singleInstance = null;
     private ConfigPOJO configurations;
 
@@ -34,6 +35,15 @@ public class Config {
         return singleInstance;
     }
 
+    public void setConfigPath(String configPath) {
+        ObjectMapper om = new ObjectMapper();
+        try {
+            configurations = om.readValue(getClass().getResourceAsStream(configPath), ConfigPOJO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public List<ResourceBundle> getVirtualMachines() {
         ResourceBundlePOJO[] vms = configurations.getVirtualMachines();
         List<ResourceBundle> result = new ArrayList<>();
@@ -44,10 +54,10 @@ public class Config {
         return result;
     }
 
-    public HashSet<EdgeServer> createEdgeServers(CloudSim sim) {
-        HashSet<EdgeServer> result = new HashSet<>();
+    public HashSet<Server> createEdgeServers(CloudSim sim) {
+        HashSet<Server> result = new HashSet<>();
         for (ResourceBundlePOJO n: configurations.getEdgeServers()) {
-            result.add(new EdgeServer(sim, new ResourceBundle(n.getCpu(), n.getBandwidth(), n.getMemory())));
+            result.add(new Server(sim, new ResourceBundle(n.getCpu(), n.getBandwidth(), n.getMemory())));
         }
 
         return result;
@@ -55,9 +65,9 @@ public class Config {
 
     public List<EdgeDeviceDragon> createEdgeDevices(CloudSim sim) {
         List<EdgeDeviceDragon> result = new ArrayList<>();
-        int[] arrivalTimes = configurations.getArrivalTimes();
+        float[] arrivalTimes = configurations.getArrivalTimes();
         for(int idx = 0; idx < configurations.getEdgeDevices().length; idx++) {
-            int arrivalTime = 0; //default arrival time
+            float arrivalTime = 0; //default arrival time
             if (idx < arrivalTimes.length) {
                 //ensure bounds
                 arrivalTime = arrivalTimes[idx];

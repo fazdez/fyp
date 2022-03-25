@@ -1,7 +1,7 @@
 package fazirul.fyp.dragon.dragonDevice;
 
 import fazirul.fyp.dragon.utils.TaskAssignment;
-import fazirul.fyp.elements.EdgeServer;
+import fazirul.fyp.elements.Server;
 import fazirul.fyp.elements.ResourceBundle;
 
 import java.util.*;
@@ -27,12 +27,17 @@ public class AssignmentVector {
      * in {@link #generateRandomUtility()} during initialization of object.
      * </p>
      */
-    private final List<TaskAssignment> possibleAssignments = new ArrayList<>();
+    private List<TaskAssignment> possibleAssignments = new ArrayList<>();
 
     public AssignmentVector(EdgeDeviceDragon edgeDevice) {
         this.edgeDevice = edgeDevice;
         List<ResourceBundle> tasks = edgeDevice.getTasks();
         tasks.forEach(t -> assignmentList.add(null));
+        generateRandomUtility();
+    }
+
+    public void addTask(ResourceBundle task) {
+        assignmentList.add(null);
         generateRandomUtility();
     }
 
@@ -49,11 +54,17 @@ public class AssignmentVector {
             Collections.shuffle(feasibleVms);
             int randomNumber = new Random().nextInt(feasibleVms.size() + 1);
             if (randomNumber == 0) { randomNumber = 1; }
+            if (feasibleVms.isEmpty()) {
+                continue;
+            }
+            if (randomNumber > 3) {
+                randomNumber = 3;
+            }
             feasibleVms = feasibleVms.subList(0, randomNumber);
 
 
             for (int virtualMachineID: feasibleVms) {
-                for (EdgeServer e: edgeDevice.getEdgeServers()) {
+                for (Server e: edgeDevice.getEdgeServers()) {
                     TaskAssignment toAdd = new TaskAssignment(taskID, e, virtualMachineID);
                     toAdd.setPrivateUtility((int) (Math.random() * 100)); //generates a random utility from 0 to 100.
                     possibleAssignments.add(toAdd);
@@ -63,6 +74,9 @@ public class AssignmentVector {
         }
 
         possibleAssignments.sort(Comparator.comparingInt(TaskAssignment::getPrivateUtility).reversed());
+        if (possibleAssignments.size() >= 50) {
+            possibleAssignments = possibleAssignments.subList(0, 50);
+        }
     }
 
     /**
@@ -77,8 +91,8 @@ public class AssignmentVector {
      *  @return true if there are enough resources available.
      */
     protected boolean isOffloadPossible() {
-        HashMap<EdgeServer, ResourceBundle> resourceAvailable = edgeDevice.getResourceAvailableInServers();
-        HashMap<EdgeServer, ResourceBundle> resourceDemanded = new HashMap<>();
+        HashMap<Server, ResourceBundle> resourceAvailable = edgeDevice.getResourceAvailableInServers();
+        HashMap<Server, ResourceBundle> resourceDemanded = new HashMap<>();
         for (TaskAssignment t: assignmentList) {
             if (t == null) { continue; }
             ResourceBundle currResourceDemanded = resourceDemanded.get(t.getServer());
@@ -89,7 +103,7 @@ public class AssignmentVector {
             resourceDemanded.put(t.getServer(), currResourceDemanded);
         }
 
-        for (EdgeServer e: resourceAvailable.keySet()) {
+        for (Server e: resourceAvailable.keySet()) {
             ResourceBundle avail = resourceAvailable.get(e);
             ResourceBundle want = resourceDemanded.get(e);
 
@@ -108,7 +122,7 @@ public class AssignmentVector {
      *
      * @see #embedding(HashMap, HashSet, int)
      */
-    protected boolean embedding(HashMap<EdgeServer, ResourceBundle> maximumResources) {
+    protected boolean embedding(HashMap<Server, ResourceBundle> maximumResources) {
         clear();
         return embedding(maximumResources, new HashSet<>(), 0);
     }
@@ -124,7 +138,7 @@ public class AssignmentVector {
      * 
      * @see #embedding(HashMap) 
      */
-    private boolean embedding(HashMap<EdgeServer, ResourceBundle> maximumResources, HashSet<Integer> ignoredTasks, int startIndex) {
+    private boolean embedding(HashMap<Server, ResourceBundle> maximumResources, HashSet<Integer> ignoredTasks, int startIndex) {
         if (ignoredTasks == null) {
             ignoredTasks = new HashSet<>();
         }
@@ -134,7 +148,7 @@ public class AssignmentVector {
         for (int idx = startIndex; idx < possibleAssignments.size(); idx++) {
             TaskAssignment t = possibleAssignments.get(idx);
             ResourceBundle resourceDemanded = edgeDevice.vmHandler.getVmResourceUsage(t.getVirtualMachineID());
-            EdgeServer e = t.getServer();
+            Server e = t.getServer();
 
             // if task is ignored or exceeds maximum resources, we skip
             if (ignoredTasks.contains(t.getTaskID()) || !maximumResources.get(e).isBounded(resourceDemanded)) { continue; }

@@ -1,7 +1,7 @@
 package fazirul.fyp.dragon.utils;
 
 import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
-import fazirul.fyp.elements.EdgeServer;
+import fazirul.fyp.elements.Server;
 
 /**
  * Represents a task and indicates which server and what virtual machine is this task is offloaded to.
@@ -10,7 +10,7 @@ import fazirul.fyp.elements.EdgeServer;
  */
 public class TaskAssignment {
     private int taskID;
-    private EdgeServer server;
+    private Server server;
     private int virtualMachineID;
     private int privateUtility = 0;
 
@@ -20,13 +20,13 @@ public class TaskAssignment {
      * @param server the server assigned
      * @param virtualMachineID the index that identifies the virtual machine in {@link fazirul.fyp.dragon.utils.VirtualMachineHandler}
      */
-    public TaskAssignment(int taskID, EdgeServer server, int virtualMachineID) {
+    public TaskAssignment(int taskID, Server server, int virtualMachineID) {
         this.taskID = taskID;
         this.server = server;
         this.virtualMachineID = virtualMachineID;
     }
 
-    public EdgeServer getServer() {
+    public Server getServer() {
         return server;
     }
 
@@ -38,7 +38,7 @@ public class TaskAssignment {
         return taskID;
     }
 
-    public void setServer(EdgeServer server) {
+    public void setServer(Server server) {
         this.server = server;
     }
 

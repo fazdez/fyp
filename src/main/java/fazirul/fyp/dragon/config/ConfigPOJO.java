@@ -28,11 +28,11 @@ public class ConfigPOJO {
         this.edgeServers = edgeServers;
     }
 
-    private int[] arrivalTimes;
-    public int[] getArrivalTimes() {
+    private float[] arrivalTimes;
+    public float[] getArrivalTimes() {
         return arrivalTimes;
     }
-    public void setArrivalTimes(int[] arrivalTimes) {
+    public void setArrivalTimes(float[] arrivalTimes) {
         this.arrivalTimes = arrivalTimes;
     }
 }

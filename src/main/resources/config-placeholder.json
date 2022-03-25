@@ -1,0 +1,13 @@
+{
+  "virtualMachines": [],
+  "edgeDevices": [
+    [{ "cpu":  1, "memory": 0, "bandwidth":  0}],
+    [{ "cpu":  1, "memory": 0, "bandwidth":  0}],
+    [{ "cpu":  1, "memory": 0, "bandwidth":  0}],
+    [{ "cpu":  1, "memory": 0, "bandwidth":  0}]
+  ],
+  "edgeServers": [
+    { "cpu":  12, "memory":  4096, "bandwidth":  2048 }
+  ],
+  "arrivalTimes": [0, 0.5, 0.7, 1.3]
+}
