@@ -1,6 +1,9 @@
-package fazirul.fyp.elements;
+package fazirul.fyp.dragon.utils;
 
 import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
+import fazirul.fyp.elements.DistributedApplication;
+import fazirul.fyp.elements.ResourceBundle;
+import fazirul.fyp.elements.Server;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.SimEntity;
@@ -96,10 +99,10 @@ public class GoogleTraceReader extends GoogleTaskEventsTraceReader  {
             edgeDevice = edgeDeviceCreateFunction.apply(event);
             edgeDevices.put(edgeDeviceUserName, edgeDevice);
         }
-        if (edgeDevice.tasks.size() > 10 ) { return true; }
+        if (edgeDevice.getTasks().size() > 10 ) { return true; }
 
         ResourceBundle task = createTaskFromEvent(event);
-        jobIDToTaskIndexMapping.put(taskIdentifier, edgeDevice.tasks.size());
+        jobIDToTaskIndexMapping.put(taskIdentifier, edgeDevice.getTasks().size());
         jobIDToEdgeDeviceMapping.put(taskIdentifier, edgeDevice);
         edgeDevice.addTask(task);
         int currentEventCount = arrivalEventCount.get(event.getTimestamp()) == null ? 0 : arrivalEventCount.get(event.getTimestamp());

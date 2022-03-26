@@ -5,7 +5,7 @@ import fazirul.fyp.dragon.dragonDevice.EdgeDeviceDragon;
 import fazirul.fyp.dragon.utils.VirtualMachineHandler;
 import fazirul.fyp.elements.DistSimManager;
 import fazirul.fyp.elements.DistributedApplication;
-import fazirul.fyp.elements.GoogleTraceReader;
+import fazirul.fyp.dragon.utils.GoogleTraceReader;
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudsimplus.traces.google.TaskEvent;
