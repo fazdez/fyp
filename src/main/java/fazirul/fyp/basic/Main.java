@@ -15,10 +15,10 @@ public class Main {
 
         new Server(simulation, new ResourceBundle(12, 0, 0));
 
-        new PlaceholderApplication(simulation, "da1", 0.3, Collections.singletonList(new ResourceBundle(1, 0,0)));
-        new PlaceholderApplication(simulation, "da2", 0.6, Collections.singletonList(new ResourceBundle(1, 0,0)));
-        new PlaceholderApplication(simulation, "da3", 0.7, Collections.singletonList(new ResourceBundle(1, 0,0)));
-        new PlaceholderApplication(simulation, "da4", 3, Collections.singletonList(new ResourceBundle(1, 0,0)));
+        new BasicApplication(simulation, "da1", 0.3, Collections.singletonList(new ResourceBundle(1, 0,0)));
+        new BasicApplication(simulation, "da2", 0.6, Collections.singletonList(new ResourceBundle(1, 0,0)));
+        new BasicApplication(simulation, "da3", 0.7, Collections.singletonList(new ResourceBundle(1, 0,0)));
+        new BasicApplication(simulation, "da4", 3, Collections.singletonList(new ResourceBundle(1, 0,0)));
 
         simulation.start();
     }
