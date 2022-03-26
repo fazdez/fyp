@@ -21,7 +21,8 @@ Users intending to implement your own distributed algorithm should only take a l
 The UML class diagram is shown below.
 
 ![UML Class Diagram](class_diagram.png)
-2. fazirul.fyp.basic
+
+2.fazirul.fyp.basic
 
 This package is a basic example on how to implement your own distributed algorithm and run the simulation. It consists of one main class to run the code, 
 and one BasicApplication class that implements the DistributedApplication. 
