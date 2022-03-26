@@ -14,9 +14,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class PlaceholderApplication extends DistributedApplication {
+public class BasicApplication extends DistributedApplication {
 
-    public PlaceholderApplication(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
+    public BasicApplication(CloudSim simulation, String username, double arrivalTime, List<ResourceBundle> tasks) {
         super(simulation, username, arrivalTime, tasks);
     }
 
